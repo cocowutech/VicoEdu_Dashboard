@@ -1,0 +1,56 @@
+introduce_coco:
+  description: >
+    Using {bio} and {signature_highlights}, create three versions of an
+    introduction to {owner_name} for a general audience (parents/partners).
+    Keep facts faithful to the provided materials; no invented claims.
+  expected_output: >
+    Markdown with three sections:
+    - Three-Sentence Intro
+    - ~120-Word Version
+    - 30-Second Pitch
+    Each version includes 1 measurable achievement and an optional bilingual
+    line if {need_bilingual} is true.
+  agent: coco_ambassador
+  output_file: intro_coco.md
+
+explain_china_edu:
+  description: >
+    Produce a one-page primer explaining China’s K–12 & test-prep ecosystem
+    using {ecosystem_notes}. Cover stages, key exams (中考/高考, IELTS/TOEFL),
+    after-school market, seasonal timelines, typical parent concerns, and
+    where {owner_name}'s programs fit.
+  expected_output: >
+    A structured brief containing:
+    - Overview (3–5 bullets)
+    - Exam timeline by grade
+    - After-school/agency landscape
+    - Common parent Q&A (5–8 items)
+    - How our bootcamps fit (who it's for, value props)
+    - Mini glossary (EN/中文)
+  agent: china_ed_explainer
+  output_file: china_edu_primer.md
+
+draft_client_email:
+  description: >
+    Draft a concise email based on {recipient_context} and {email_goal}
+    (e.g., pricing clarification, onboarding, scheduling, follow-up). Respect
+    {tone} (formal|friendly-pro) and {need_bilingual}.
+  expected_output: >
+    - Subject line (<=70 chars)
+    - Email body with short paragraphs and clear next steps
+    - Optional bilingual EN/中文 version when {need_bilingual} is true
+    - Signature block for {owner_name} with contact placeholders
+  agent: client_emailer
+  output_file: email_draft.txt
+
+answer_bootcamp_faq:
+  description: >
+    Answer a prospective client’s question about {product_name} using
+    {product_faq}, {pricing_table}, {schedule}, and {policies}. If info is
+    missing, ask one clarifying question and provide a marked draft answer.
+  expected_output: >
+    - Answer (<=180 words) with bullets where useful
+    - One clear CTA (e.g., “Book a 15-min call: {{link}}”)
+    - “What I need to confirm” list if any fields are unknown
+  agent: bootcamp_faq
+  output_file: faq_answer.md

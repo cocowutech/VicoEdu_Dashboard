@@ -1,5 +1,0 @@
-import pandas as pd
-df = pd.read_excel("/Users/cocowu/Desktop/Word_Test.xlsx")
-df.iloc[:,0] = df.iloc[:,0].str.lower()
-df.to_excel("/Users/cocowu/Desktop/Word_Test_lower.xlsx",index=False)
-print("ok")
