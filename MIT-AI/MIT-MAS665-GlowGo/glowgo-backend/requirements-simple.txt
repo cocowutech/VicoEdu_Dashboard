@@ -1,0 +1,33 @@
+# Simplified requirements for GlowGo Backend
+# Install with: pip install -r requirements-simple.txt
+
+# Core Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# Validation & Settings
+pydantic>=2.5.0
+pydantic-settings>=2.10.1
+python-dotenv==1.0.0
+
+# Authentication
+google-auth-oauthlib==1.1.0
+PyJWT>=2.9.0
+
+# AI/LLM - Simplified versions
+google-generativeai>=0.8.0
+langchain-google-genai>=2.0.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+openai>=1.51.0
+
+# Email
+sendgrid==6.11.0
+email-validator==2.1.0
+
+# Utilities
+pytz>=2024.1

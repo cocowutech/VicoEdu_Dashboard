@@ -1,0 +1,725 @@
+"""
+Conversation Tools for CrewAI Multi-Agent System
+Production-ready tools with Pydantic validation
+"""
+
+import re
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
+from pydantic import BaseModel, Field
+
+
+class IntentParserTool(BaseModel):
+    """Tool to parse user intent and identify service type"""
+    
+    name: str = "intent_parser"
+    description: str = "Parses user message to identify service type with confidence score"
+    
+    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Extract service type from user message
+        
+        Args:
+            inputs: {"message": str}
+            
+        Returns:
+            {"service_type": str, "confidence": float}
+        """
+        try:
+            message = inputs.get("message", "").lower()
+            
+            if not message:
+                return {"service_type": None, "confidence": 0.0}
+            
+            # Service category keywords with confidence levels
+            categories = {
+                "haircut": {
+                    "exact": ["haircut", "hair cut"],
+                    "partial": ["cut", "trim", "barber", "stylist", "hair style"],
+                    "confidence": 0.95
+                },
+                "nails": {
+                    "exact": ["nails", "manicure", "pedicure"],
+                    "partial": ["nail art", "gel nails", "mani", "pedi"],
+                    "confidence": 0.95
+                },
+                "massage": {
+                    "exact": ["massage"],
+                    "partial": ["deep tissue", "swedish", "hot stone", "body work", "rub"],
+                    "confidence": 0.90
+                },
+                "spa": {
+                    "exact": ["spa", "spa day"],
+                    "partial": ["spa treatment", "relaxation", "pamper"],
+                    "confidence": 0.85
+                },
+                "facial": {
+                    "exact": ["facial", "face treatment"],
+                    "partial": ["skincare", "skin care", "face care"],
+                    "confidence": 0.90
+                },
+                "waxing": {
+                    "exact": ["waxing", "wax"],
+                    "partial": ["hair removal", "brazilian", "bikini wax"],
+                    "confidence": 0.90
+                },
+                "makeup": {
+                    "exact": ["makeup", "make up"],
+                    "partial": ["cosmetics", "beauty makeup", "glam"],
+                    "confidence": 0.90
+                },
+                "cleaning": {
+                    "exact": ["cleaning", "house cleaning"],
+                    "partial": ["clean", "maid", "housekeeping"],
+                    "confidence": 0.85
+                }
+            }
+            
+            # Find best match
+            best_match = None
+            best_confidence = 0.0
+            
+            for category, keywords in categories.items():
+                # Check exact matches
+                for keyword in keywords["exact"]:
+                    if keyword in message:
+                        return {
+                            "service_type": category,
+                            "confidence": keywords["confidence"]
+                        }
+                
+                # Check partial matches
+                for keyword in keywords["partial"]:
+                    if keyword in message:
+                        if keywords["confidence"] > best_confidence:
+                            best_match = category
+                            best_confidence = keywords["confidence"] * 0.8  # Lower confidence for partial
+            
+            if best_match:
+                return {"service_type": best_match, "confidence": best_confidence}
+            
+            return {"service_type": None, "confidence": 0.0}
+            
+        except Exception as e:
+            print(f"IntentParserTool error: {e}")
+            return {"service_type": None, "confidence": 0.0}
+
+
+class PreferenceExtractorTool(BaseModel):
+    """Tool to extract structured preferences from user message"""
+    
+    name: str = "preference_extractor"
+    description: str = "Extracts budget, time urgency, and provider preferences from natural language"
+    
+    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Extract preferences from message
+
+        Args:
+            inputs: {"message": str, "current_preferences": dict}
+
+        Returns:
+            {"budget_min": float, "budget_max": float, "time_urgency": str, "artisan_preference": str,
+             "preferred_date": str, "preferred_time": str, "time_constraint": str}
+        """
+        try:
+            message = inputs.get("message", "")
+            current_prefs = inputs.get("current_preferences", {})
+
+            # Debug logging
+            print(f"\n[PreferenceExtractor] Processing message: '{message}'")
+
+            result = {
+                "budget_min": current_prefs.get("budget_min"),
+                "budget_max": current_prefs.get("budget_max"),
+                "time_urgency": current_prefs.get("time_urgency"),
+                "artisan_preference": current_prefs.get("artisan_preference"),
+                "special_notes": current_prefs.get("special_notes"),
+                "preferred_date": current_prefs.get("preferred_date"),
+                "preferred_time": current_prefs.get("preferred_time"),
+                "time_constraint": current_prefs.get("time_constraint")
+            }
+
+            # Extract budget
+            budget = self._extract_budget(message)
+            if budget["budget_min"]:
+                result["budget_min"] = budget["budget_min"]
+            if budget["budget_max"]:
+                result["budget_max"] = budget["budget_max"]
+
+            # Extract urgency (returns urgency category)
+            urgency = self._extract_urgency(message)
+            if urgency:
+                result["time_urgency"] = urgency
+
+            # Extract specific date and time details
+            datetime_details = self._extract_datetime_details(message)
+            if datetime_details["preferred_date"]:
+                result["preferred_date"] = datetime_details["preferred_date"]
+            if datetime_details["preferred_time"]:
+                result["preferred_time"] = datetime_details["preferred_time"]
+            if datetime_details["time_constraint"]:
+                result["time_constraint"] = datetime_details["time_constraint"]
+
+            # Extract artisan preference
+            artisan_pref = self._extract_artisan_preference(message)
+            if artisan_pref:
+                result["artisan_preference"] = artisan_pref
+
+            # Debug logging - show what was extracted
+            extracted_items = {k: v for k, v in result.items() if v is not None}
+            print(f"[PreferenceExtractor] Extracted: {extracted_items}")
+
+            return result
+
+        except Exception as e:
+            print(f"PreferenceExtractorTool error: {e}")
+            return inputs.get("current_preferences", {})
+    
+    def _extract_budget(self, text: str) -> Dict[str, Optional[float]]:
+        """Extract budget from text"""
+        # Only extract numbers with $ sign or budget-related context
+        # This prevents extracting time numbers like "3 pm"
+
+        # Word to number mapping for spoken numbers
+        word_to_num = {
+            'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+            'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+            'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
+            'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70,
+            'eighty': 80, 'ninety': 90, 'hundred': 100, 'thousand': 1000
+        }
+
+        # Convert word numbers to digits in the text
+        text_converted = text
+        for word, num in word_to_num.items():
+            # Match whole words only with word boundaries
+            pattern = r'\b' + word + r'\b'
+            text_converted = re.sub(pattern, str(num), text_converted, flags=re.IGNORECASE)
+
+        # Pattern 1: Explicit dollar amounts ($50, $ 50)
+        dollar_amounts = re.findall(r'\$\s*(\d+(?:\.\d{2})?)', text_converted)
+
+        # Pattern 2: Numbers followed by budget keywords
+        budget_context = re.findall(r'(\d+(?:\.\d{2})?)\s*(?:dollars?|bucks?|budget)', text_converted.lower())
+
+        # Pattern 3: Range pattern (50 - 80, 50-80, 50 to 80)
+        # This is a strong signal of budget even without $ or keywords
+        # BUT: Exclude if it looks like a time range (has am/pm nearby or values < 24)
+        range_match = re.search(r'(\d+(?:\.\d{2})?)\s*(?:-|to)\s*(\d+(?:\.\d{2})?)', text_converted.lower())
+        if range_match:
+            min_val = float(range_match.group(1))
+            max_val = float(range_match.group(2))
+
+            # Skip if this looks like a time range
+            # Check for time-related indicators
+            match_start = range_match.start()
+            match_end = range_match.end()
+            text_before = text_converted[max(0, match_start-15):match_start].lower()
+            text_after = text_converted[match_end:match_end+10].lower()
+
+            # Time range indicators
+            time_indicators = [
+                'am', 'pm', 'between', 'available', 'open', 'hours',
+                'time', 'o\'clock', 'oclock'
+            ]
+
+            has_time_context = any(
+                indicator in text_before or indicator in text_after
+                for indicator in time_indicators
+            )
+
+            # Both numbers < 24 suggests hours (9-5, 2-4, etc.)
+            is_small_range = (min_val < 24 and max_val < 24)
+
+            # Check if there's explicit budget context in the message
+            has_budget_context = any(word in text_converted.lower() for word in [
+                'budget', 'price', 'cost', 'dollar', '$', 'pay', 'spend', 'afford'
+            ])
+
+            # Skip if it looks like time
+            # BUT: If numbers are >= 25, it's likely budget even without context
+            #      (e.g., "50-80" is budget, "9-5" is time)
+            is_likely_budget_range = max_val >= 25  # Budgets are usually $25+
+
+            is_likely_time_range = (
+                (is_small_range and has_time_context) or
+                (is_small_range and not has_budget_context and not is_likely_budget_range)
+            )
+
+            if not is_likely_time_range:
+                return {"budget_min": min(min_val, max_val), "budget_max": max(min_val, max_val)}
+
+        # Combine both patterns
+        all_amounts = dollar_amounts + budget_context
+
+        if not all_amounts:
+            return {"budget_min": None, "budget_max": None}
+
+        numbers = [float(amt) for amt in all_amounts]
+
+        # Range pattern with $ or keywords
+        if len(numbers) >= 2 and ("-" in text_converted or "to" in text_converted.lower()):
+            return {"budget_min": min(numbers), "budget_max": max(numbers)}
+
+        amount = numbers[0]
+
+        # "around", "about" → ±20%
+        if any(word in text_converted.lower() for word in ["around", "about", "approximately"]):
+            return {"budget_min": amount * 0.8, "budget_max": amount * 1.2}
+
+        # "up to", "max" → max only
+        if any(word in text_converted.lower() for word in ["up to", "max", "maximum", "under", "less than", "below", "not more than"]):
+            return {"budget_min": None, "budget_max": amount}
+
+        # "at least", "min" → min only
+        if any(word in text_converted.lower() for word in ["at least", "min", "minimum", "over", "more than", "above"]):
+            return {"budget_min": amount, "budget_max": None}
+        
+        # Default: treat as max
+        return {"budget_min": None, "budget_max": amount}
+    
+    def _extract_urgency(self, text: str) -> Optional[str]:
+        """
+        Extract time urgency category ONLY when no specific date/time is mentioned.
+        If user provides specific datetime details, return None to let preferred_date/time handle it.
+        """
+        text_lower = text.lower()
+        now = datetime.now()
+
+        # Check if user provided specific time details (3pm, 5:30, etc.)
+        has_specific_time = bool(re.search(r'\d{1,2}\s*(am|pm|:\d{2})', text_lower))
+
+        # Check if user mentioned constraint words (before, after, by)
+        has_time_constraint = any(word in text_lower for word in ["before", "after", "by"])
+
+        # ASAP - immediate
+        if any(word in text_lower for word in ["asap", "urgent", "now", "immediately", "emergency"]):
+            return "ASAP"
+
+        # Today - same day
+        if any(word in text_lower for word in ["today", "this afternoon", "tonight", "this evening"]):
+            # If they also mention specific time, don't return "today" - let preferred_date handle it
+            if has_specific_time:
+                return None
+            return "today"
+
+        # Tomorrow
+        if any(word in text_lower for word in ["tomorrow", "tmr"]):
+            # If they mention specific time with tomorrow, don't categorize as "week"
+            if has_specific_time or has_time_constraint:
+                return None
+            return "week"
+
+        # Check for specific day names
+        days_of_week = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+        for day in days_of_week:
+            if day in text_lower:
+                # If they mention a specific day WITH time or constraint, return None
+                # This allows preferred_date and preferred_time to be shown instead of generic "week"
+                if has_specific_time or has_time_constraint:
+                    return None
+                # Otherwise, it's a general "week" request
+                return "week"
+
+        # Week-related phrases (only if no specific datetime)
+        if any(word in text_lower for word in [
+            "this week", "next week", "next few days", "soon", "weekend"
+        ]):
+            if has_specific_time or has_time_constraint:
+                return None
+            return "week"
+
+        # Flexible - no rush
+        if any(word in text_lower for word in ["flexible", "whenever", "anytime", "no rush", "any time"]):
+            return "flexible"
+
+        return None
+
+    def _extract_datetime_details(self, text: str) -> Dict[str, Optional[str]]:
+        """
+        Extract specific date, time, and time constraints from text
+
+        Examples:
+            "before next thursday" → date: 2025-11-27, time: None, constraint: before
+            "before next thursday 3 pm" → date: 2025-11-27, time: 15:00, constraint: before
+            "after 5pm tomorrow" → date: 2025-11-16, time: 17:00, constraint: after
+            "next thursday" → date: 2025-11-27, time: None, constraint: None
+            "monday at 2:30pm" → date: 2025-11-18, time: 14:30, constraint: None
+
+        Returns:
+            {"preferred_date": str (ISO format), "preferred_time": str (24h format), "time_constraint": str}
+        """
+        text_lower = text.lower()
+        now = datetime.now()
+
+        result = {
+            "preferred_date": None,
+            "preferred_time": None,
+            "time_constraint": None
+        }
+
+        print(f"[DateTimeExtractor] Processing text: '{text}'")
+
+        # Extract time constraint (before, after, by)
+        if "before" in text_lower:
+            result["time_constraint"] = "before"
+            print(f"[DateTimeExtractor] Found constraint: before")
+        elif "after" in text_lower:
+            result["time_constraint"] = "after"
+            print(f"[DateTimeExtractor] Found constraint: after")
+        elif "by" in text_lower:
+            result["time_constraint"] = "by"
+            print(f"[DateTimeExtractor] Found constraint: by")
+
+        # Extract specific time (e.g., "3 pm", "3pm", "15:00", "3:30pm")
+        time_patterns = [
+            r'(\d{1,2}):(\d{2})\s*(am|pm)',  # 3:30pm, 3:30 pm
+            r'(\d{1,2})\s*(am|pm)',           # 3pm, 3 pm
+            r'(\d{1,2}):(\d{2})'              # 15:00, 3:30 (24h format)
+        ]
+
+        for pattern in time_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                groups = match.groups()
+
+                if len(groups) == 2 and groups[1] in ['am', 'pm']:
+                    # Format: "3pm" or "3 pm"
+                    hour = int(groups[0])
+                    minute = 0
+                    if groups[1] == 'pm' and hour != 12:
+                        hour += 12
+                    elif groups[1] == 'am' and hour == 12:
+                        hour = 0
+                    result["preferred_time"] = f"{hour:02d}:{minute:02d}"
+                    break
+
+                elif len(groups) == 3 and groups[2] in ['am', 'pm']:
+                    # Format: "3:30pm" or "3:30 pm"
+                    hour = int(groups[0])
+                    minute = int(groups[1])
+                    if groups[2] == 'pm' and hour != 12:
+                        hour += 12
+                    elif groups[2] == 'am' and hour == 12:
+                        hour = 0
+                    result["preferred_time"] = f"{hour:02d}:{minute:02d}"
+                    break
+
+                elif len(groups) == 2 and groups[0] and groups[1]:
+                    # Format: "15:00" (24h format)
+                    hour = int(groups[0])
+                    minute = int(groups[1])
+                    if 0 <= hour <= 23 and 0 <= minute <= 59:
+                        result["preferred_time"] = f"{hour:02d}:{minute:02d}"
+                        break
+
+        # Extract specific date
+        # Day names with context
+        days_of_week = {
+            "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+            "friday": 4, "saturday": 5, "sunday": 6
+        }
+
+        current_weekday = now.weekday()
+
+        # Check for "today"
+        if "today" in text_lower:
+            result["preferred_date"] = now.date().isoformat()
+
+        # Check for "tomorrow"
+        elif "tomorrow" in text_lower or "tmr" in text_lower:
+            tomorrow = now + timedelta(days=1)
+            result["preferred_date"] = tomorrow.date().isoformat()
+
+        # Check for specific day names
+        else:
+            for day_name, day_num in days_of_week.items():
+                if day_name in text_lower:
+                    # Determine if "next" is mentioned
+                    is_next_week = "next" in text_lower
+
+                    # Calculate days until that day
+                    days_ahead = day_num - current_weekday
+
+                    if is_next_week:
+                        # "next thursday" always means next week
+                        if days_ahead <= 0:
+                            days_ahead += 7
+                        else:
+                            days_ahead += 7
+                    elif days_ahead < 0:
+                        # Day has already passed this week, go to next week
+                        days_ahead += 7
+                    elif days_ahead == 0:
+                        # It's today - check if user mentioned time constraint
+                        # If "before" or "by" is mentioned, they probably mean today
+                        # Otherwise, they might mean next week
+                        if "before" in text_lower or "by" in text_lower:
+                            # Keep days_ahead = 0 (today)
+                            pass
+                        else:
+                            # Assume next occurrence of this day
+                            days_ahead = 7
+
+                    target_date = now + timedelta(days=days_ahead)
+                    result["preferred_date"] = target_date.date().isoformat()
+                    print(f"[DateTimeExtractor] Found {day_name} → date: {result['preferred_date']} (days_ahead: {days_ahead}, is_next_week: {is_next_week})")
+                    break
+
+        print(f"[DateTimeExtractor] Final result: {result}")
+        return result
+
+    def _extract_artisan_preference(self, text: str) -> Optional[str]:
+        """Extract provider preferences"""
+        text_lower = text.lower()
+        preferences = []
+        
+        # Gender
+        if "female" in text_lower or "woman" in text_lower:
+            preferences.append("female")
+        if "male" in text_lower or "man" in text_lower and "female" not in text_lower:
+            preferences.append("male")
+        
+        # Experience
+        if any(word in text_lower for word in ["experienced", "senior", "expert", "professional"]):
+            preferences.append("experienced")
+        
+        # Openness
+        if any(word in text_lower for word in ["open", "anyone", "no preference", "any"]):
+            return "open to anyone"
+        
+        return " ".join(preferences) if preferences else None
+
+
+class ClarifyingQuestionGeneratorTool(BaseModel):
+    """Tool to generate clarifying questions based on missing information"""
+    
+    name: str = "clarifying_question_generator"
+    description: str = "Generates natural follow-up questions for missing preference fields"
+    
+    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate clarifying question
+        
+        Args:
+            inputs: {"current_preferences": dict, "missing_fields": list}
+            
+        Returns:
+            {"question": str, "field": str}
+        """
+        try:
+            missing_fields = inputs.get("missing_fields", [])
+            
+            if not missing_fields:
+                return {
+                    "question": "Perfect! Let me find the best matches for you!",
+                    "field": None
+                }
+            
+            # Get first missing field
+            field = missing_fields[0]
+            
+            # Question templates
+            questions = {
+                "service_type": "What service are you looking for?",
+                "budget": "What's your budget for this service?",
+                "time_info": "When do you need this?",  # Changed from time_urgency to time_info
+                "artisan_preference": "Any preferences for the provider?"
+            }
+            
+            question = questions.get(field, "Can you tell me more about what you're looking for?")
+            
+            return {"question": question, "field": field}
+            
+        except Exception as e:
+            print(f"ClarifyingQuestionGeneratorTool error: {e}")
+            return {
+                "question": "What service are you looking for?",
+                "field": "service_type"
+            }
+
+
+class ConversationContextManagerTool(BaseModel):
+    """Tool to manage conversation context and build summaries"""
+    
+    name: str = "conversation_context_manager"
+    description: str = "Manages conversation history and builds context summaries"
+    
+    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Build conversation context
+        
+        Args:
+            inputs: {"conversation_history": list, "extracted_data": dict}
+            
+        Returns:
+            {"context": str, "summary": str}
+        """
+        try:
+            history = inputs.get("conversation_history", [])
+            extracted = inputs.get("extracted_data", {})
+            
+            # Build context from last 4 messages
+            context_messages = history[-4:] if len(history) > 4 else history
+            context = "\n".join([
+                f"{msg.get('role', 'user').upper()}: {msg.get('content', '')}"
+                for msg in context_messages
+            ])
+            
+            # Build summary of what we know
+            summary_parts = []
+            if extracted.get("service_type"):
+                summary_parts.append(f"Service: {extracted['service_type']}")
+            if extracted.get("budget_max"):
+                summary_parts.append(f"Budget: ${extracted['budget_max']}")
+            if extracted.get("time_urgency"):
+                summary_parts.append(f"When: {extracted['time_urgency']}")
+            
+            summary = " | ".join(summary_parts) if summary_parts else "No preferences yet"
+            
+            return {
+                "context": context,
+                "summary": summary
+            }
+            
+        except Exception as e:
+            print(f"ConversationContextManagerTool error: {e}")
+            return {"context": "", "summary": ""}
+
+
+class DateTimeContextTool(BaseModel):
+    """Tool to provide current date/time context"""
+
+    name: str = "datetime_context"
+    description: str = "Provides current date and time context for understanding relative dates"
+
+    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get current date/time context
+
+        Returns:
+            dict with current date/time information
+        """
+        now = datetime.now()
+
+        # Calculate day of week
+        day_name = now.strftime("%A")  # e.g., "Thursday"
+        date_str = now.strftime("%B %d, %Y")  # e.g., "November 15, 2025"
+        time_str = now.strftime("%I:%M %p")  # e.g., "5:30 PM"
+
+        # Calculate tomorrow
+        tomorrow = now + timedelta(days=1)
+        tomorrow_name = tomorrow.strftime("%A")
+
+        # Days until weekend
+        days_until_weekend = (5 - now.weekday()) if now.weekday() < 5 else 0
+
+        return {
+            "current_day": day_name,
+            "current_date": date_str,
+            "current_time": time_str,
+            "full_datetime": f"{day_name}, {date_str} at {time_str}",
+            "tomorrow": tomorrow_name,
+            "days_until_weekend": days_until_weekend,
+            "is_weekend": now.weekday() >= 5
+        }
+
+
+class ReadinessDetectorTool(BaseModel):
+    """Tool to detect if user is ready for matching"""
+    
+    name: str = "readiness_detector"
+    description: str = "Determines if we have enough information to match user with providers"
+    
+    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Check readiness for matching
+        
+        Args:
+            inputs: {"current_preferences": dict}
+            
+        Returns:
+            {"ready_to_match": bool, "missing_fields": list, "completeness": float}
+        """
+        try:
+            prefs = inputs.get("current_preferences", {})
+
+            # For time, accept EITHER time_urgency (general) OR preferred_date/time/constraint (specific)
+            # Cases:
+            # 1. "before next thursday" → time_constraint="before", preferred_date="2025-11-27"
+            # 2. "before next thursday 3pm" → time_constraint="before", preferred_date="2025-11-27", preferred_time="15:00"
+            # 3. "next thursday" → preferred_date="2025-11-27"
+            has_time_info = bool(
+                prefs.get("time_urgency") or
+                prefs.get("preferred_date") or
+                prefs.get("preferred_time") or
+                prefs.get("time_constraint")
+            )
+
+            # Debug logging
+            print(f"\n[ReadinessDetector] Checking preferences:")
+            print(f"  service_type: {prefs.get('service_type')}")
+            print(f"  budget: {prefs.get('budget_min') or prefs.get('budget_max')}")
+            print(f"  time_urgency: {prefs.get('time_urgency')}")
+            print(f"  preferred_date: {prefs.get('preferred_date')}")
+            print(f"  preferred_time: {prefs.get('preferred_time')}")
+            print(f"  time_constraint: {prefs.get('time_constraint')}")
+            print(f"  has_time_info: {has_time_info}")
+
+            # Required fields
+            required = {
+                "service_type": prefs.get("service_type"),
+                "budget": prefs.get("budget_min") or prefs.get("budget_max"),
+                "time_info": has_time_info  # Accept any form of time information
+            }
+
+            # Optional field
+            optional = {
+                "artisan_preference": prefs.get("artisan_preference")
+            }
+
+            # Find missing required fields
+            missing_fields = [
+                field for field, value in required.items()
+                if not value  # Changed from "is None" to handle boolean False
+            ]
+            
+            # Calculate completeness (including optional)
+            total_fields = len(required) + len(optional)
+            filled_fields = sum(1 for v in required.values() if v)  # Use truthiness for boolean
+            filled_fields += sum(1 for v in optional.values() if v is not None)
+            completeness = filled_fields / total_fields
+            
+            # Ready if all required fields present
+            ready_to_match = len(missing_fields) == 0
+
+            print(f"[ReadinessDetector] Result: ready_to_match={ready_to_match}, missing_fields={missing_fields}\n")
+
+            return {
+                "ready_to_match": ready_to_match,
+                "missing_fields": missing_fields,
+                "completeness": round(completeness, 2)
+            }
+            
+        except Exception as e:
+            print(f"ReadinessDetectorTool error: {e}")
+            return {
+                "ready_to_match": False,
+                "missing_fields": ["service_type", "budget", "time_info"],
+                "completeness": 0.0
+            }
+
+
+# Tool instances for easy import
+intent_parser_tool = IntentParserTool()
+preference_extractor_tool = PreferenceExtractorTool()
+clarifying_question_generator_tool = ClarifyingQuestionGeneratorTool()
+conversation_context_manager_tool = ConversationContextManagerTool()
+datetime_context_tool = DateTimeContextTool()
+readiness_detector_tool = ReadinessDetectorTool()
+
+
+
