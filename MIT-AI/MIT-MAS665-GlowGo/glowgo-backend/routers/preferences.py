@@ -95,8 +95,9 @@ async def chat_preferences(
         
         current_preferences = {
             "service_type": session.service_type,
-            "budget_min": float(session.budget_min) if session.budget_min else None,
-            "budget_max": float(session.budget_max) if session.budget_max else None,
+            # Preserve valid 0 values instead of dropping them as falsy
+            "budget_min": float(session.budget_min) if session.budget_min is not None else None,
+            "budget_max": float(session.budget_max) if session.budget_max is not None else None,
             "time_urgency": session.time_urgency,
             "preferred_date": session.preferred_date,
             "preferred_time": session.preferred_time,
@@ -137,6 +138,7 @@ async def chat_preferences(
                 logger.info("User is ready to match. Triggering MatchingCrew automatically...")
 
                 # Build preferences dict for matching crew
+                # Include user-selected location so we don't fall back to the default (Cambridge)
                 preferences_for_matching = {
                     "service_type": updated_preferences.get("service_type"),
                     "budget_min": updated_preferences.get("budget_min"),
@@ -146,7 +148,8 @@ async def chat_preferences(
                     "preferred_time": updated_preferences.get("preferred_time"),
                     "time_constraint": updated_preferences.get("time_constraint"),
                     "artisan_preference": updated_preferences.get("artisan_preference"),
-                    "special_notes": updated_preferences.get("special_notes")
+                    "special_notes": updated_preferences.get("special_notes"),
+                    "location": updated_preferences.get("location"),
                 }
 
                 # Execute matching crew with timeout (60 seconds max)
@@ -197,23 +200,24 @@ async def chat_preferences(
                 )
 
         # Step 6: Update session with new preferences
-        if updated_preferences.get("service_type"):
+        if updated_preferences.get("service_type") is not None:
             session.service_type = updated_preferences["service_type"]
-        if updated_preferences.get("budget_min"):
+        # Use explicit None checks to allow 0 for budget_min / budget_max
+        if updated_preferences.get("budget_min") is not None:
             session.budget_min = updated_preferences["budget_min"]
-        if updated_preferences.get("budget_max"):
+        if updated_preferences.get("budget_max") is not None:
             session.budget_max = updated_preferences["budget_max"]
-        if updated_preferences.get("time_urgency"):
+        if updated_preferences.get("time_urgency") is not None:
             session.time_urgency = updated_preferences["time_urgency"]
-        if updated_preferences.get("preferred_date"):
+        if updated_preferences.get("preferred_date") is not None:
             session.preferred_date = updated_preferences["preferred_date"]
-        if updated_preferences.get("preferred_time"):
+        if updated_preferences.get("preferred_time") is not None:
             session.preferred_time = updated_preferences["preferred_time"]
-        if updated_preferences.get("time_constraint"):
+        if updated_preferences.get("time_constraint") is not None:
             session.time_constraint = updated_preferences["time_constraint"]
-        if updated_preferences.get("artisan_preference"):
+        if updated_preferences.get("artisan_preference") is not None:
             session.artisan_preference = updated_preferences["artisan_preference"]
-        if updated_preferences.get("special_notes"):
+        if updated_preferences.get("special_notes") is not None:
             session.special_notes = updated_preferences["special_notes"]
         
         # Update ready_to_match status
@@ -240,8 +244,8 @@ async def chat_preferences(
             session_id=session.session_id,
             preferences=PreferenceSchema(
                 service_type=session.service_type,
-                budget_min=float(session.budget_min) if session.budget_min else None,
-                budget_max=float(session.budget_max) if session.budget_max else None,
+                budget_min=float(session.budget_min) if session.budget_min is not None else None,
+                budget_max=float(session.budget_max) if session.budget_max is not None else None,
                 time_urgency=session.time_urgency,
                 preferred_date=session.preferred_date,
                 preferred_time=session.preferred_time,

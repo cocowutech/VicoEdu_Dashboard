@@ -206,6 +206,10 @@ class WorkingHoursCheckerTool(BaseModel):
         """
         Get provider's working hours
 
+        Preference order:
+        1. Use precise business hours from Yelp (stored in merchants.business_hours JSONB)
+        2. Fallback to default hours based on merchant location/state
+
         Args:
             inputs: {
                 "provider_id": str,
@@ -236,10 +240,9 @@ class WorkingHoursCheckerTool(BaseModel):
                 close_session = True
 
             try:
-                # In production, this would query a working_hours table
-                # For now, using default hours based on merchant location
+                # Try to read precise business hours from merchants table
                 query = text("""
-                    SELECT state, city
+                    SELECT state, city, business_hours
                     FROM merchants
                     WHERE id = :provider_id
                 """)
@@ -251,24 +254,27 @@ class WorkingHoursCheckerTool(BaseModel):
                     return self._get_default_hours()
 
                 state = row[0]
+                business_hours = None
+                if len(row) > 2:
+                    business_hours = row[2]
 
                 # Determine timezone based on state
                 timezone = self._get_timezone_from_state(state)
 
-                # For MVP, return standard business hours
-                # In production, this would be stored per-merchant
-                hours = {
-                    "monday": ["09:00", "18:00"],
-                    "tuesday": ["09:00", "18:00"],
-                    "wednesday": ["09:00", "18:00"],
-                    "thursday": ["09:00", "18:00"],
-                    "friday": ["09:00", "18:00"],
-                    "saturday": ["10:00", "16:00"],
-                    "sunday": ["closed", "closed"]
-                }
+                # If we have Yelp-style business hours, convert them
+                if business_hours:
+                    try:
+                        hours = self._convert_yelp_hours_to_working_hours(business_hours)
+                        return {
+                            "hours": hours,
+                            "timezone": timezone
+                        }
+                    except Exception as parse_error:
+                        print(f"WorkingHoursCheckerTool: error parsing business_hours: {parse_error}")
 
+                # Fallback: standard business hours when no Yelp data is available
                 return {
-                    "hours": hours,
+                    "hours": self._get_default_hours()["hours"],
                     "timezone": timezone
                 }
 
@@ -294,6 +300,93 @@ class WorkingHoursCheckerTool(BaseModel):
             },
             "timezone": "America/New_York"
         }
+
+    def _convert_yelp_hours_to_working_hours(self, business_hours: Any) -> Dict[str, List[str]]:
+        """
+        Convert Yelp-style business hours into simple open/close times per weekday.
+
+        Yelp format (stored in merchants.business_hours):
+        [
+            {"day": 0, "start": "0900", "end": "1700", "is_overnight": false},
+            ...
+        ]
+
+        We map this to:
+        {
+            "monday": ["09:00", "17:00"],
+            ...
+        }
+
+        If multiple intervals exist for a day, we take the earliest opening
+        and latest closing as the effective working hours.
+        """
+        # Ensure we are working with a list (may arrive as JSON string or dict)
+        if isinstance(business_hours, str):
+            import json
+
+            business_hours_parsed = json.loads(business_hours)
+        else:
+            business_hours_parsed = business_hours
+
+        if not isinstance(business_hours_parsed, list):
+            # Unexpected format, fallback to default
+            return self._get_default_hours()["hours"]
+
+        # Map of weekday index (0=Mon) to list of (start, end) tuples
+        day_intervals: Dict[int, List[tuple]] = {}
+
+        for entry in business_hours_parsed:
+            try:
+                day_index = int(entry.get("day"))
+                start_raw = entry.get("start")
+                end_raw = entry.get("end")
+
+                if start_raw is None or end_raw is None:
+                    continue
+
+                # Yelp time strings are "HHMM" (e.g., "0930")
+                if len(start_raw) == 4:
+                    start_str = f"{start_raw[0:2]}:{start_raw[2:4]}"
+                else:
+                    # Best-effort parsing
+                    start_str = f"{start_raw[0:2]}:{start_raw[2:4]}" if len(start_raw) >= 4 else "09:00"
+
+                if len(end_raw) == 4:
+                    end_str = f"{end_raw[0:2]}:{end_raw[2:4]}"
+                else:
+                    end_str = f"{end_raw[0:2]}:{end_raw[2:4]}" if len(end_raw) >= 4 else "17:00"
+
+                if day_index not in day_intervals:
+                    day_intervals[day_index] = []
+                day_intervals[day_index].append((start_str, end_str))
+            except Exception:
+                continue
+
+        # Helper to pick earliest open and latest close
+        def combine_intervals(intervals: List[tuple]) -> List[str]:
+            if not intervals:
+                return ["closed", "closed"]
+            opens = [i[0] for i in intervals]
+            closes = [i[1] for i in intervals]
+            return [min(opens), max(closes)]
+
+        # Build final mapping
+        day_names = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
+
+        hours: Dict[str, List[str]] = {}
+        for idx, name in enumerate(day_names):
+            intervals = day_intervals.get(idx, [])
+            hours[name] = combine_intervals(intervals)
+
+        return hours
 
     def _get_timezone_from_state(self, state: str) -> str:
         """Map state to timezone"""

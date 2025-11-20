@@ -183,6 +183,26 @@ class DataCollectionCrew:
             logger.info(f"After deduplication: {len(unique_providers)} unique providers")
 
             # ======================================================================
+            # STEP 2.5: Enrich with Yelp business details (working hours, etc.)
+            # ======================================================================
+            # For each unique Yelp provider, fetch detailed info including business_hours
+            # so we can later respect real opening hours when matching user time preferences.
+            for provider in unique_providers:
+                yelp_id = provider.get("yelp_id")
+                if not yelp_id:
+                    continue
+
+                try:
+                    details_raw = yelp_details_tool._run(yelp_id)
+                    details = json.loads(details_raw)
+
+                    # Attach business hours if available (list of {day, start, end, is_overnight})
+                    if isinstance(details, dict) and details.get("business_hours"):
+                        provider["business_hours"] = details["business_hours"]
+                except Exception as e:
+                    logger.warning(f"Error fetching Yelp details for {yelp_id}: {e}")
+
+            # ======================================================================
             # STEP 3: Enhance with BrightData scraping
             # ======================================================================
             # Get additional pricing/availability data
