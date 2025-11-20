@@ -122,17 +122,38 @@ class ConversationAgent:
             print(f"[ConversationAgent] Preference result: {preference_result}")
 
             # Merge extracted preferences
+            # Use explicit None checks so that valid falsy values (e.g., 0 for budget_min) are preserved
             extracted_preferences = {
-                "service_type": preference_result.get("service_type") or current_preferences.get("service_type"),
-                "budget_min": preference_result.get("budget_min") or current_preferences.get("budget_min"),
-                "budget_max": preference_result.get("budget_max") or current_preferences.get("budget_max"),
-                "time_urgency": preference_result.get("time_urgency") or current_preferences.get("time_urgency"),
-                "artisan_preference": preference_result.get("artisan_preference") or current_preferences.get("artisan_preference"),
-                "special_notes": preference_result.get("special_notes") or current_preferences.get("special_notes"),
-                "preferred_date": preference_result.get("preferred_date") or current_preferences.get("preferred_date"),
-                "preferred_time": preference_result.get("preferred_time") or current_preferences.get("preferred_time"),
-                "time_constraint": preference_result.get("time_constraint") or current_preferences.get("time_constraint"),
-                "location": preference_result.get("location") or current_preferences.get("location")
+                "service_type": preference_result.get("service_type")
+                if preference_result.get("service_type") is not None
+                else current_preferences.get("service_type"),
+                "budget_min": preference_result.get("budget_min")
+                if preference_result.get("budget_min") is not None
+                else current_preferences.get("budget_min"),
+                "budget_max": preference_result.get("budget_max")
+                if preference_result.get("budget_max") is not None
+                else current_preferences.get("budget_max"),
+                "time_urgency": preference_result.get("time_urgency")
+                if preference_result.get("time_urgency") is not None
+                else current_preferences.get("time_urgency"),
+                "artisan_preference": preference_result.get("artisan_preference")
+                if preference_result.get("artisan_preference") is not None
+                else current_preferences.get("artisan_preference"),
+                "special_notes": preference_result.get("special_notes")
+                if preference_result.get("special_notes") is not None
+                else current_preferences.get("special_notes"),
+                "preferred_date": preference_result.get("preferred_date")
+                if preference_result.get("preferred_date") is not None
+                else current_preferences.get("preferred_date"),
+                "preferred_time": preference_result.get("preferred_time")
+                if preference_result.get("preferred_time") is not None
+                else current_preferences.get("preferred_time"),
+                "time_constraint": preference_result.get("time_constraint")
+                if preference_result.get("time_constraint") is not None
+                else current_preferences.get("time_constraint"),
+                "location": preference_result.get("location")
+                if preference_result.get("location") is not None
+                else current_preferences.get("location"),
             }
             print(f"[ConversationAgent] Merged extracted_preferences: {extracted_preferences}")
             

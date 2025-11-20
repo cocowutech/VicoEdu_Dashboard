@@ -143,9 +143,10 @@ class PreferenceExtractorTool(BaseModel):
 
             # Extract budget
             budget = self._extract_budget(message)
-            if budget["budget_min"]:
+            # Use explicit None checks so that a valid 0 value is preserved
+            if budget["budget_min"] is not None:
                 result["budget_min"] = budget["budget_min"]
-            if budget["budget_max"]:
+            if budget["budget_max"] is not None:
                 result["budget_max"] = budget["budget_max"]
 
             # Extract urgency (returns urgency category)
@@ -189,31 +190,73 @@ class PreferenceExtractorTool(BaseModel):
 
         # Word to number mapping for spoken numbers
         word_to_num = {
-            'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
-            'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
-            'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
-            'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70,
-            'eighty': 80, 'ninety': 90, 'hundred': 100, 'thousand': 1000
+            "zero": 0,
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
+            "six": 6,
+            "seven": 7,
+            "eight": 8,
+            "nine": 9,
+            "ten": 10,
+            "eleven": 11,
+            "twelve": 12,
+            "thirteen": 13,
+            "fourteen": 14,
+            "fifteen": 15,
+            "sixteen": 16,
+            "seventeen": 17,
+            "eighteen": 18,
+            "nineteen": 19,
+            "twenty": 20,
+            "thirty": 30,
+            "forty": 40,
+            "fifty": 50,
+            "sixty": 60,
+            "seventy": 70,
+            "eighty": 80,
+            "ninety": 90,
+            "hundred": 100,
+            "thousand": 1000,
         }
 
         # Convert word numbers to digits in the text
         text_converted = text
         for word, num in word_to_num.items():
             # Match whole words only with word boundaries
-            pattern = r'\b' + word + r'\b'
+            pattern = r"\b" + word + r"\b"
             text_converted = re.sub(pattern, str(num), text_converted, flags=re.IGNORECASE)
 
-        # Pattern 1: Explicit dollar amounts ($50, $ 50)
-        dollar_amounts = re.findall(r'\$\s*(\d+(?:\.\d{2})?)', text_converted)
+        text_lower = text_converted.lower()
+
+        # Handle "up to / under / max" style phrases FIRST so they don't get short-circuited
+        # Examples: "up to 100", "up to 100$", "under 50 dollars", "max 80"
+        up_to_pattern = re.search(
+            r"(?:up to|under|less than|below|not more than|max(?:imum)?)\s*\$?\s*(\d+(?:\.\d{2})?)",
+            text_lower,
+        )
+        if up_to_pattern:
+            amount = float(up_to_pattern.group(1))
+            return {"budget_min": 0.0, "budget_max": amount}
+
+        # Pattern 1: Explicit dollar amounts ($50, $ 50, 50$)
+        dollar_amounts = re.findall(r"\$\s*(\d+(?:\.\d{2})?)", text_converted)
+        trailing_dollar_amounts = re.findall(r"(\d+(?:\.\d{2})?)\s*\$", text_converted)
+        dollar_amounts.extend(trailing_dollar_amounts)
 
         # Pattern 2: Numbers followed by budget keywords
-        budget_context = re.findall(r'(\d+(?:\.\d{2})?)\s*(?:dollars?|bucks?|budget)', text_converted.lower())
+        budget_context = re.findall(
+            r"(\d+(?:\.\d{2})?)\s*(?:dollars?|bucks?|budget)", text_lower
+        )
 
         # Pattern 3: Range pattern (50 - 80, 50-80, 50 to 80)
         # This is a strong signal of budget even without $ or keywords
         # BUT: Exclude if it looks like a time range (has am/pm nearby or values < 24)
-        range_match = re.search(r'(\d+(?:\.\d{2})?)\s*(?:-|to)\s*(\d+(?:\.\d{2})?)', text_converted.lower())
+        range_match = re.search(
+            r"(\d+(?:\.\d{2})?)\s*(?:-|to)\s*(\d+(?:\.\d{2})?)", text_lower
+        )
         if range_match:
             min_val = float(range_match.group(1))
             max_val = float(range_match.group(2))
@@ -275,9 +318,10 @@ class PreferenceExtractorTool(BaseModel):
         if any(word in text_converted.lower() for word in ["around", "about", "approximately"]):
             return {"budget_min": amount * 0.8, "budget_max": amount * 1.2}
 
-        # "up to", "max" → max only
+        # "up to", "max" → explicit 0-to-max range
         if any(word in text_converted.lower() for word in ["up to", "max", "maximum", "under", "less than", "below", "not more than"]):
-            return {"budget_min": None, "budget_max": amount}
+            # Treat these phrases as implicitly starting from 0
+            return {"budget_min": 0.0, "budget_max": amount}
 
         # "at least", "min" → min only
         if any(word in text_converted.lower() for word in ["at least", "min", "minimum", "over", "more than", "above"]):
