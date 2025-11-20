@@ -23,12 +23,15 @@ export default function LoginPage() {
 
     try {
       // Send Google ID token to backend
-      await loginWithGoogle(credentialResponse.credential)
-      
-      // Redirect to dashboard on success
-      router.push('/dashboard')
+      console.log('[LOGIN] Sending Google token to backend...')
+      const userData = await loginWithGoogle(credentialResponse.credential)
+      console.log('[LOGIN] Login successful, user:', userData)
+
+      // Redirect to chat (service flow) on success
+      console.log('[LOGIN] Redirecting to /chat...')
+      router.push('/chat')
     } catch (err: any) {
-      console.error('Login error:', err)
+      console.error('[LOGIN] Login error:', err)
       setError(err.message || 'Failed to login. Please try again.')
     } finally {
       setIsLoading(false)
@@ -90,7 +93,6 @@ export default function LoginPage() {
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            useOneTap
             theme="filled_blue"
             size="large"
             text="continue_with"

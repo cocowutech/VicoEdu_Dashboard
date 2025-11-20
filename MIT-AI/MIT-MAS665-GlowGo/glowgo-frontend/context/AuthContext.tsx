@@ -25,8 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return localStorage.getItem('auth_token')
   })
 
-  // Keep loading false so the login screen shows immediately if there's no session.
-  const [loading, setLoading] = useState(false)
+  // Start with loading true to prevent flicker/redirect race conditions
+  const [loading, setLoading] = useState(true)
+
+  // Set loading to false after initial hydration
+  useEffect(() => {
+    setLoading(false)
+  }, [])
 
   // In case localStorage changes in another tab, sync token/user
   useEffect(() => {
