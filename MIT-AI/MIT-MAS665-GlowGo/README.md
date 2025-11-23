@@ -40,6 +40,16 @@ An intelligent service booking platform that uses multi-agent AI to match custom
 - Google OAuth integration
 - JWT-based sessions
 - Protected routes
+- Automatic redirect to chat after login
+
+### 🏠 Marketing Landing Page
+- **4 full-page sections** with smooth scrolling
+- Fixed header with navigation
+- Hero section with value proposition
+- Problem statement with statistics
+- Image mosaic showcasing services
+- Video CTA with "GLOW NOW" button
+- Mobile-responsive design
 
 ## 🚀 Quick Start
 
@@ -80,6 +90,16 @@ MIT-MAS665-GlowGo/
 ├── 📄 GETTING_STARTED.md           # Detailed setup guide
 ├── 📄 ENV_SETUP.md                 # Environment variables guide
 ├── 📄 FRONTEND_FIXES_SUMMARY.md    # Frontend enhancement details
+│
+├── 🖼️  landingpage/                 # Marketing landing page assets
+│   ├── Picture1.png                # Hero image - facial treatment
+│   ├── Picture2.png                # Problem section - beauty textures
+│   ├── Picture3.png                # Mosaic - skincare application
+│   ├── Picture4.png                # Mosaic - beauty tools
+│   ├── Picture5.png                # Mosaic - spa setup
+│   ├── Picture6.png                # Mosaic - wellness product
+│   ├── Video1.mp4                  # CTA background video
+│   └── LandingPageLayout.png       # Design reference
 │
 ├── 🗄️  database/
 │   ├── schema.sql                  # PostgreSQL schema with seed data
@@ -131,13 +151,19 @@ MIT-MAS665-GlowGo/
 │
 └── ⚛️  glowgo-frontend/            # Next.js Frontend
     ├── app/                        # Next.js 14 App Router
-    │   ├── page.tsx                # Homepage
-    │   ├── layout.tsx              # Root layout
+    │   ├── page.tsx                # Homepage (renders landing)
+    │   ├── layout.tsx              # Root layout with Google OAuth
     │   ├── globals.css             # Global styles
-    │   ├── auth/login/             # Login page
-    │   ├── chat/                   # Chat interface
+    │   ├── landing/                # Marketing landing page
+    │   │   └── page.tsx            # 4-page scrollable landing
+    │   ├── auth/login/             # Google OAuth login
+    │   ├── chat/                   # AI chat interface
+    │   ├── dashboard/              # User dashboard
     │   ├── booking/                # Booking flow
     │   └── matches/                # Match results
+    │
+    ├── public/
+    │   └── landingpage/            # Landing page images & video
     │
     ├── components/                 # React components
     │   ├── Header.tsx

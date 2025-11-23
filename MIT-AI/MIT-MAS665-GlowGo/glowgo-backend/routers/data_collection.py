@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 
 from services.crews.data_collection_crew import data_collection_crew
+from services.yelp_storage_service import yelp_storage_service
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,8 @@ async def start_collection(
 
 @router.post("/collect/boston-cambridge", response_model=CollectionResult)
 async def collect_boston_cambridge(
-    limit_per_category: int = 10
+    limit_per_category: int = 10,
+    save_to_db: bool = False
 ):
     """
     Collect providers from Boston and Cambridge areas.
@@ -115,15 +117,29 @@ async def collect_boston_cambridge(
     This is a convenience endpoint that collects data from both
     Boston, MA and Cambridge, MA for all beauty service categories.
 
+    Args:
+        limit_per_category: Number of results per category (default 10)
+        save_to_db: If True, save collected providers to database with estimated prices
+
     Returns the collected provider data immediately (synchronous).
     """
     try:
-        logger.info(f"Starting Boston/Cambridge collection (limit: {limit_per_category})")
+        logger.info(f"Starting Boston/Cambridge collection (limit: {limit_per_category}, save: {save_to_db})")
 
         # Run collection
         results = await data_collection_crew.get_boston_cambridge_providers(
             limit_per_category=limit_per_category
         )
+
+        # Optionally save to database
+        if save_to_db and results["providers"]:
+            logger.info(f"Saving {len(results['providers'])} providers to database...")
+            storage_result = await yelp_storage_service.store_providers(results["providers"])
+            logger.info(f"Storage complete: {storage_result['inserted']} inserted, {storage_result['updated']} updated")
+
+            # Add storage info to errors if any
+            if storage_result["errors"]:
+                results["errors"].extend(storage_result["errors"])
 
         return CollectionResult(
             status="completed",
@@ -135,6 +151,70 @@ async def collect_boston_cambridge(
 
     except Exception as e:
         logger.error(f"Boston/Cambridge collection error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class StorageRequest(BaseModel):
+    """Request model for storing providers"""
+    providers: List[dict] = Field(
+        description="List of provider data to store"
+    )
+
+
+class StorageResponse(BaseModel):
+    """Response model for storage operation"""
+    status: str
+    total_processed: int
+    inserted: int
+    updated: int
+    services_created: int
+    errors: List[str]
+
+
+@router.post("/store", response_model=StorageResponse)
+async def store_providers(request: StorageRequest):
+    """
+    Store collected provider data to the database.
+
+    This endpoint takes provider data (e.g., from a previous collection)
+    and saves it to the database with estimated service prices.
+    """
+    try:
+        logger.info(f"Storing {len(request.providers)} providers to database")
+
+        result = await yelp_storage_service.store_providers(request.providers)
+
+        return StorageResponse(
+            status="completed",
+            total_processed=result["total_processed"],
+            inserted=result["inserted"],
+            updated=result["updated"],
+            services_created=result["services_created"],
+            errors=result["errors"]
+        )
+
+    except Exception as e:
+        logger.error(f"Storage error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/stats")
+async def get_collection_stats():
+    """
+    Get statistics about collected provider data in the database.
+    """
+    try:
+        provider_counts = await yelp_storage_service.get_provider_count()
+        service_counts = await yelp_storage_service.get_service_count()
+
+        return {
+            "providers": provider_counts,
+            "services": service_counts,
+            "timestamp": datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Stats error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

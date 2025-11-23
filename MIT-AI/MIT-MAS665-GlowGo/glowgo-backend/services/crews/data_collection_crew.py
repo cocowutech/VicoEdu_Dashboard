@@ -372,19 +372,19 @@ class DataCollectionCrew:
     def _map_to_service_category(self, categories: List[str]) -> str:
         """Map Yelp/scraped categories to our service_category enum"""
         if not categories:
-            return "other"
+            return "beauty salon"
 
         # Convert to lowercase for matching
         cats_lower = [c.lower() if isinstance(c, str) else "" for c in categories]
         cats_str = " ".join(cats_lower)
 
-        # Priority order matching
+        # Priority order matching - using standardized category names
         if any(term in cats_str for term in ["barber", "barbershop"]):
-            return "barber"
+            return "barbershop"
         elif any(term in cats_str for term in ["hair salon", "hair stylist", "hairdresser"]):
-            return "hair_salon"
+            return "hair salon"
         elif any(term in cats_str for term in ["nail", "manicure", "pedicure"]):
-            return "nail_salon"
+            return "nail salon"
         elif any(term in cats_str for term in ["massage", "massage therapy"]):
             return "massage"
         elif any(term in cats_str for term in ["day spa", "med spa", "spa"]):
@@ -396,9 +396,9 @@ class DataCollectionCrew:
         elif any(term in cats_str for term in ["makeup", "cosmetic"]):
             return "makeup"
         elif any(term in cats_str for term in ["brow", "lash", "eyebrow", "eyelash"]):
-            return "brows_lashes"
+            return "eyebrow services"
         else:
-            return "other"
+            return "beauty salon"
 
     async def get_boston_cambridge_providers(
         self,

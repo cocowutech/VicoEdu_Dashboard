@@ -47,6 +47,37 @@ export type MerchantOption = {
   yelp_url?: string;
 };
 
+// Service within a grouped provider
+export type ServiceOption = {
+  service_name: string;
+  price: number;
+  booking_url?: string;
+};
+
+// Provider with grouped services
+export type GroupedProvider = {
+  merchant_id: string;
+  merchant_name: string;
+  photo_url?: string;
+  photos?: string[];
+  address?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  price_range?: string;
+  specialties?: string[];
+  stylist_names?: string[];
+  rating: number;
+  reviews: number;
+  distance?: number;
+  why_recommended: string;
+  relevance_score: number;
+  yelp_url?: string;
+  booking_url?: string;
+  services: ServiceOption[];
+  rank: number;
+};
+
 export type ChatResponse = {
   success: boolean;
   session_id: string;

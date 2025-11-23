@@ -286,7 +286,18 @@ class MatchingAgent:
                         "is_verified": candidate.get("is_verified", False),
                         "duration_minutes": candidate.get("duration_minutes"),
                         "city": candidate.get("city"),
-                        "state": candidate.get("state")
+                        "state": candidate.get("state"),
+                        # Enhanced fields for real provider data
+                        "photo_url": candidate.get("merchant_photo") or candidate.get("photo_url", ""),
+                        "photos": candidate.get("photos", []),
+                        "address": candidate.get("address", ""),
+                        "phone": candidate.get("phone", ""),
+                        "price_range": candidate.get("price_range", ""),
+                        "specialties": candidate.get("specialties", []),
+                        "stylist_names": candidate.get("stylist_names", []),
+                        "booking_url": candidate.get("booking_url", ""),
+                        "yelp_url": candidate.get("yelp_url", ""),
+                        "bio": candidate.get("bio", "")
                     })
 
                 return {

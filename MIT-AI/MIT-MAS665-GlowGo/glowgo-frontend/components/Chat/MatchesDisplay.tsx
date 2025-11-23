@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { MerchantOption } from '@/types/booking'
-import Button from '@/components/Button'
+import { useState, useEffect, useMemo } from 'react'
+import { MerchantOption, GroupedProvider, ServiceOption } from '@/types/booking'
 
 interface MatchesDisplayProps {
   matches: MerchantOption[]
@@ -24,6 +23,63 @@ export default function MatchesDisplay({
     const timer = setTimeout(() => setIsAnimating(false), 100)
     return () => clearTimeout(timer)
   }, [])
+
+  // Group matches by merchant_id
+  const groupedProviders: GroupedProvider[] = useMemo(() => {
+    const providerMap = new Map<string, GroupedProvider>()
+
+    matches.forEach((match) => {
+      const merchantId = match.merchant_id || match.merchant_name
+
+      if (providerMap.has(merchantId)) {
+        // Add service to existing provider
+        const existing = providerMap.get(merchantId)!
+        existing.services.push({
+          service_name: match.service_name || 'Service',
+          price: match.price,
+          booking_url: match.booking_url
+        })
+        // Update relevance score to max
+        if (match.relevance_score > existing.relevance_score) {
+          existing.relevance_score = match.relevance_score
+          existing.why_recommended = match.why_recommended
+        }
+      } else {
+        // Create new provider entry
+        providerMap.set(merchantId, {
+          merchant_id: merchantId,
+          merchant_name: match.merchant_name,
+          photo_url: match.photo_url,
+          photos: match.photos,
+          address: match.address,
+          city: match.city,
+          state: match.state,
+          phone: match.phone,
+          price_range: match.price_range,
+          specialties: match.specialties,
+          stylist_names: match.stylist_names,
+          rating: match.rating,
+          reviews: match.reviews,
+          distance: match.distance,
+          why_recommended: match.why_recommended,
+          relevance_score: match.relevance_score,
+          yelp_url: match.yelp_url,
+          booking_url: match.booking_url,
+          rank: match.rank,
+          services: [{
+            service_name: match.service_name || 'Service',
+            price: match.price,
+            booking_url: match.booking_url
+          }]
+        })
+      }
+    })
+
+    // Convert to array and sort by relevance score
+    return Array.from(providerMap.values())
+      .sort((a, b) => b.relevance_score - a.relevance_score)
+      .map((provider, index) => ({ ...provider, rank: index + 1 }))
+  }, [matches])
 
   if (loading) {
     return (
@@ -62,20 +118,20 @@ export default function MatchesDisplay({
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-poppins font-bold text-gray-900 mb-2">
-            Your Perfect Matches 🎯
+            Your Perfect Matches
           </h2>
           {searchSummary && (
             <p className="text-gray-600 text-base">{searchSummary}</p>
           )}
-          {matches.length > 0 && (
+          {groupedProviders.length > 0 && (
             <p className="text-gray-500 text-sm mt-2">
-              Found {matches.length} great {matches.length === 1 ? 'option' : 'options'} for you
+              Found {groupedProviders.length} great {groupedProviders.length === 1 ? 'provider' : 'providers'} for you
             </p>
           )}
         </div>
 
         {/* Matches Grid */}
-        {matches.length === 0 ? (
+        {groupedProviders.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl">🔍</span>
@@ -89,8 +145,8 @@ export default function MatchesDisplay({
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {matches.map((match, index) => (
-              <MatchCard key={index} match={match} index={index} />
+            {groupedProviders.map((provider, index) => (
+              <ProviderCard key={provider.merchant_id} provider={provider} index={index} />
             ))}
           </div>
         )}
@@ -99,16 +155,32 @@ export default function MatchesDisplay({
   )
 }
 
-interface MatchCardProps {
-  match: MerchantOption
+interface ProviderCardProps {
+  provider: GroupedProvider
   index: number
 }
 
-function MatchCard({ match, index }: MatchCardProps) {
+function ProviderCard({ provider, index }: ProviderCardProps) {
   const [imageError, setImageError] = useState(false)
 
   // Get the best available photo
-  const photoUrl = match.photo_url || (match.photos && match.photos[0]) || null
+  const photoUrl = provider.photo_url || (provider.photos && provider.photos[0]) || null
+
+  // Get minimum price from services
+  const minPrice = Math.min(...provider.services.map(s => s.price))
+
+  // Handle service button click - direct booking
+  const handleServiceClick = (service: ServiceOption) => {
+    if (service.booking_url) {
+      window.open(service.booking_url, '_blank')
+    } else if (provider.booking_url) {
+      window.open(provider.booking_url, '_blank')
+    } else if (provider.yelp_url) {
+      window.open(provider.yelp_url, '_blank')
+    } else {
+      console.log('Book:', provider.merchant_name, service.service_name)
+    }
+  }
 
   return (
     <div
@@ -119,15 +191,15 @@ function MatchCard({ match, index }: MatchCardProps) {
       <div className="relative">
         <div className="absolute top-3 left-3 z-10">
           <div className="w-10 h-10 bg-blush-500 rounded-full flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-sm">#{match.rank}</span>
+            <span className="text-white font-bold text-sm">#{provider.rank}</span>
           </div>
         </div>
 
         {/* Price Range Badge */}
-        {match.price_range && (
+        {provider.price_range && (
           <div className="absolute top-3 right-3 z-10">
             <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full text-xs font-semibold shadow-sm">
-              {match.price_range}
+              {provider.price_range}
             </span>
           </div>
         )}
@@ -137,7 +209,7 @@ function MatchCard({ match, index }: MatchCardProps) {
           <div className="h-44 overflow-hidden">
             <img
               src={photoUrl}
-              alt={match.merchant_name}
+              alt={provider.merchant_name}
               className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
               onError={() => setImageError(true)}
             />
@@ -152,25 +224,32 @@ function MatchCard({ match, index }: MatchCardProps) {
       <div className="p-5">
         {/* Merchant Name */}
         <h3 className="text-lg font-poppins font-bold text-gray-900 mb-1 truncate">
-          {match.merchant_name}
+          {provider.merchant_name}
         </h3>
 
         {/* Location */}
-        {(match.city || match.address) && (
+        {(provider.city || provider.address) && (
           <p className="text-xs text-gray-500 mb-2 truncate">
-            📍 {match.city && match.state ? `${match.city}, ${match.state}` : match.address}
+            📍 {provider.city && provider.state ? `${provider.city}, ${provider.state}` : provider.address}
           </p>
         )}
 
-        {/* Service Name */}
-        {match.service_name && (
-          <p className="text-sm text-gray-600 mb-2">{match.service_name}</p>
-        )}
+        {/* Rating & Reviews */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-1">
+            <span className="text-yellow-500">⭐</span>
+            <span className="font-semibold text-gray-900">{provider.rating.toFixed(1)}</span>
+          </div>
+          <span className="text-gray-500 text-sm">({provider.reviews} reviews)</span>
+          {provider.distance != null && (
+            <span className="text-gray-500 text-sm">{provider.distance.toFixed(1)} mi</span>
+          )}
+        </div>
 
         {/* Specialties Tags */}
-        {match.specialties && match.specialties.length > 0 && (
+        {provider.specialties && provider.specialties.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {match.specialties.slice(0, 2).map((specialty, idx) => (
+            {provider.specialties.slice(0, 2).map((specialty, idx) => (
               <span
                 key={idx}
                 className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs"
@@ -178,105 +257,70 @@ function MatchCard({ match, index }: MatchCardProps) {
                 {specialty}
               </span>
             ))}
-            {match.specialties.length > 2 && (
-              <span className="text-xs text-gray-400">+{match.specialties.length - 2}</span>
+            {provider.specialties.length > 2 && (
+              <span className="text-xs text-gray-400">+{provider.specialties.length - 2}</span>
             )}
-          </div>
-        )}
-
-        {/* Rating & Reviews */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex items-center gap-1">
-            <span className="text-yellow-500">⭐</span>
-            <span className="font-semibold text-gray-900">{match.rating.toFixed(1)}</span>
-          </div>
-          <span className="text-gray-500 text-sm">({match.reviews} reviews)</span>
-        </div>
-
-        {/* Price & Distance */}
-        <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
-          <div>
-            <p className="text-xs text-gray-500">Starting at</p>
-            <p className="text-xl font-bold text-blush-600">${match.price}</p>
-          </div>
-          {match.distance !== undefined && (
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Distance</p>
-              <p className="text-sm font-medium text-gray-700">{match.distance.toFixed(1)} mi</p>
-            </div>
-          )}
-        </div>
-
-        {/* Stylists */}
-        {match.stylist_names && match.stylist_names.length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs text-gray-500 mb-1">Stylists:</p>
-            <p className="text-sm text-gray-700 truncate">
-              {match.stylist_names.slice(0, 3).join(', ')}
-              {match.stylist_names.length > 3 && ` +${match.stylist_names.length - 3} more`}
-            </p>
           </div>
         )}
 
         {/* Why Recommended */}
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-1">Why we recommend:</p>
-          <p className="text-sm text-gray-700 line-clamp-2">{match.why_recommended}</p>
+          <p className="text-sm text-gray-700 line-clamp-2">{provider.why_recommended}</p>
         </div>
 
-        {/* Available Times */}
-        {match.available_times && match.available_times.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-gray-500 mb-2">Available times:</p>
-            <div className="flex flex-wrap gap-2">
-              {match.available_times.slice(0, 3).map((time, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 bg-blush-50 text-blush-700 rounded-full text-xs font-medium"
-                >
-                  {time}
-                </span>
-              ))}
-              {match.available_times.length > 3 && (
-                <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded-full text-xs">
-                  +{match.available_times.length - 3} more
-                </span>
-              )}
-            </div>
+        {/* Service Buttons - Direct Booking */}
+        <div className="mb-3">
+          <p className="text-xs text-gray-500 mb-2">Click to book:</p>
+          <div className="flex flex-wrap gap-2">
+            {provider.services.map((service, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleServiceClick(service)}
+                className="px-3 py-2 bg-blush-500 hover:bg-blush-600 text-white rounded-lg text-xs font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+              >
+                {service.service_name} ${service.price}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Stylists */}
+        {provider.stylist_names && provider.stylist_names.length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 mb-1">Stylists:</p>
+            <p className="text-sm text-gray-700 truncate">
+              {provider.stylist_names.slice(0, 3).join(', ')}
+              {provider.stylist_names.length > 3 && ` +${provider.stylist_names.length - 3} more`}
+            </p>
           </div>
         )}
 
-        {/* Book Button */}
-        <Button
-          variant="primary"
-          size="sm"
-          fullWidth
-          onClick={() => {
-            if (match.booking_url) {
-              window.open(match.booking_url, '_blank')
-            } else {
-              console.log('Book:', match.merchant_name)
-            }
-          }}
-        >
-          {match.booking_url ? 'Book Now' : 'View Details'}
-        </Button>
-
-        {/* Relevance Score & Links */}
-        <div className="mt-2 flex items-center justify-between">
+        {/* Footer with Match Score & Links */}
+        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
           <span className="text-xs text-gray-400">
-            Match: {Math.round(match.relevance_score * 100)}%
+            Match: {Math.round(provider.relevance_score * 100)}%
           </span>
-          {match.yelp_url && (
-            <a
-              href={match.yelp_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blush-500 hover:text-blush-600"
-            >
-              View on Yelp
-            </a>
-          )}
+          <div className="flex items-center gap-2">
+            {provider.phone && (
+              <a
+                href={`tel:${provider.phone}`}
+                className="text-xs text-blush-500 hover:text-blush-600"
+              >
+                Call
+              </a>
+            )}
+            {provider.yelp_url && (
+              <a
+                href={provider.yelp_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blush-500 hover:text-blush-600"
+              >
+                Yelp
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </div>

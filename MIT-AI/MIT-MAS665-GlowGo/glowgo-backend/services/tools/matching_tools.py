@@ -83,7 +83,10 @@ class ServiceFilterTool(BaseModel):
                         location_clause = " AND LOWER(m.city) LIKE :city_0"
 
                 query = text("""
-                    SELECT DISTINCT s.*, m.business_name, m.rating, m.is_verified,
+                    SELECT DISTINCT
+                           s.id, s.merchant_id, s.service_name, s.description,
+                           s.base_price, s.duration_minutes, s.photo_url, s.is_active,
+                           m.business_name, m.rating, m.is_verified,
                            m.location_lat, m.location_lon, m.city, m.state,
                            m.phone, m.address, m.photo_url as merchant_photo,
                            m.price_range, m.photos, m.specialties, m.stylist_names,
@@ -125,29 +128,28 @@ class ServiceFilterTool(BaseModel):
                         "merchant_id": str(row[1]),
                         "service_name": row[2],
                         "description": row[3],
-                        "base_price": float(row[4]),
+                        "base_price": float(row[4]) if row[4] else 0.0,
                         "duration_minutes": row[5],
                         "photo_url": row[6],
                         "is_active": row[7],
-                        # row[8] is created_at, row[9] is updated_at
-                        "merchant_name": row[10],
-                        "merchant_rating": float(row[11]) if row[11] else 0.0,
-                        "is_verified": row[12],
-                        "location_lat": float(row[13]) if row[13] else None,
-                        "location_lon": float(row[14]) if row[14] else None,
-                        "city": row[15] if len(row) > 15 else "",
-                        "state": row[16] if len(row) > 16 else "",
+                        "merchant_name": row[8],
+                        "merchant_rating": float(row[9]) if row[9] else 0.0,
+                        "is_verified": row[10],
+                        "location_lat": float(row[11]) if row[11] else None,
+                        "location_lon": float(row[12]) if row[12] else None,
+                        "city": row[13] if len(row) > 13 else "",
+                        "state": row[14] if len(row) > 14 else "",
                         # Enhanced fields
-                        "phone": row[17] if len(row) > 17 else "",
-                        "address": row[18] if len(row) > 18 else "",
-                        "merchant_photo": row[19] if len(row) > 19 else "",
-                        "price_range": row[20] if len(row) > 20 else "",
-                        "photos": row[21] if len(row) > 21 else [],
-                        "specialties": row[22] if len(row) > 22 else [],
-                        "stylist_names": row[23] if len(row) > 23 else [],
-                        "booking_url": row[24] if len(row) > 24 else "",
-                        "yelp_url": row[25] if len(row) > 25 else "",
-                        "bio": row[26] if len(row) > 26 else ""
+                        "phone": row[15] if len(row) > 15 else "",
+                        "address": row[16] if len(row) > 16 else "",
+                        "merchant_photo": row[17] if len(row) > 17 else "",
+                        "price_range": row[18] if len(row) > 18 else "",
+                        "photos": row[19] if len(row) > 19 else [],
+                        "specialties": row[20] if len(row) > 20 else [],
+                        "stylist_names": row[21] if len(row) > 21 else [],
+                        "booking_url": row[22] if len(row) > 22 else "",
+                        "yelp_url": row[23] if len(row) > 23 else "",
+                        "bio": row[24] if len(row) > 24 else ""
                     }
                     matching_services.append(service_dict)
 
