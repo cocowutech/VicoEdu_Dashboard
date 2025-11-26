@@ -84,3 +84,4 @@ echo "Frontend URL: http://localhost:3000"
 echo ""
 echo "=== GlowGo is running! ==="
 
+
