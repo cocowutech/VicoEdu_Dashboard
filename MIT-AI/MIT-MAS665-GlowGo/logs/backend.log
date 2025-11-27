@@ -1,0 +1,402 @@
+INFO:     Will watch for changes in these directories: ['/home/vitaly/MIT-MAS665-GlowGo/MIT-AI/MIT-MAS665-GlowGo/glowgo-backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [134432] using WatchFiles
+INFO:     Started server process [134576]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+🚀 GlowGo Backend Starting...
+📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
+INFO:     127.0.0.1:52650 - "OPTIONS /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52650 - "POST /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52662 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
+
+[ConversationAgent] Step 1: Parsing intent from message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[ConversationAgent] Current preferences before intent parsing: {'service_type': None, 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
+[ConversationAgent] Intent result: {'service_type': 'haircut', 'confidence': 0.95}
+[ConversationAgent] Updated service_type to: haircut
+[ConversationAgent] Current preferences after intent parsing: {'service_type': 'haircut', 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
+
+[ConversationAgent] Step 2: Extracting preferences
+
+[PreferenceExtractor] Processing message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[DateTimeExtractor] Processing text: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[DateTimeExtractor] After time word conversion: 'i want haircut next week on monday. up to 60$. in boston area.'
+[DateTimeExtractor] Found 'next week': 2025-12-01 (Monday)
+[DateTimeExtractor] Final result: {'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None}
+[PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'location': 'Boston'}
+[ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
+[ConversationAgent] Merged extracted_preferences: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
+
+[ConversationAgent] Step 3: Checking readiness
+
+[ReadinessDetector] Checking preferences:
+  service_type: haircut
+  budget: 60.0
+  time_urgency: week
+  preferred_date: 2025-12-01
+  preferred_time: None
+  time_constraint: None
+  location: Boston
+  has_time_info: True
+[ReadinessDetector] Result: ready_to_match=True, missing_fields=[]
+
+[ConversationAgent] Readiness result: {'ready_to_match': True, 'missing_fields': [], 'completeness': 0.8}
+[ConversationAgent] Ready to match: True, Missing: []
+
+[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}, 'response_to_user': 'Perfect! Let me find the best matches for you!', 'ready_to_match': True, 'next_question': None, 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week | Location: Boston'}
+
+🔍 Step 1: Filtering by service type: haircut in Boston
+✅ Found 9 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 2 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 2 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 1 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 2 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 2 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Salon Mario Russo
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+🔍 Checking availability for: Salon Mario Russo
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 2
+   Total available slots: 36
+INFO:     127.0.0.1:52662 - "POST /api/preferences/chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45414 - "OPTIONS /api/matches/find HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45416 - "OPTIONS /api/matches/find HTTP/1.1" 200 OK
+🔍 Step 1: Filtering by service type: haircut in Cambridge
+✅ Found 11 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 8 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 8 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 3 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 8 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 8 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Dellaria Salon Cambridge
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Floyd's 99 Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Floyd's 99 Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Floyd's 99 Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 8
+   Total available slots: 960
+INFO:     127.0.0.1:45416 - "POST /api/matches/find HTTP/1.1" 200 OK
+🔍 Step 1: Filtering by service type: haircut in Cambridge
+✅ Found 11 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 8 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 8 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 3 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 8 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 8 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Dellaria Salon Cambridge
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Floyd's 99 Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Floyd's 99 Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+🔍 Checking availability for: Floyd's 99 Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 120 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 120
+   Step 4: Validating against double-bookings...
+   ✅ 120 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 8
+   Total available slots: 960
+INFO:     127.0.0.1:45414 - "POST /api/matches/find HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42708 - "POST /api/auth/google-login HTTP/1.1" 200 OK
+
+[ConversationAgent] Step 1: Parsing intent from message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[ConversationAgent] Current preferences before intent parsing: {'service_type': None, 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
+[ConversationAgent] Intent result: {'service_type': 'haircut', 'confidence': 0.95}
+[ConversationAgent] Updated service_type to: haircut
+[ConversationAgent] Current preferences after intent parsing: {'service_type': 'haircut', 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
+
+[ConversationAgent] Step 2: Extracting preferences
+
+[PreferenceExtractor] Processing message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[DateTimeExtractor] Processing text: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[DateTimeExtractor] After time word conversion: 'i want haircut next week on monday. up to 60$. in boston area.'
+[DateTimeExtractor] Found 'next week': 2025-12-01 (Monday)
+[DateTimeExtractor] Final result: {'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None}
+[PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'location': 'Boston'}
+[ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
+[ConversationAgent] Merged extracted_preferences: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
+
+[ConversationAgent] Step 3: Checking readiness
+
+[ReadinessDetector] Checking preferences:
+  service_type: haircut
+  budget: 60.0
+  time_urgency: week
+  preferred_date: 2025-12-01
+  preferred_time: None
+  time_constraint: None
+  location: Boston
+  has_time_info: True
+[ReadinessDetector] Result: ready_to_match=True, missing_fields=[]
+
+[ConversationAgent] Readiness result: {'ready_to_match': True, 'missing_fields': [], 'completeness': 0.8}
+[ConversationAgent] Ready to match: True, Missing: []
+
+[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}, 'response_to_user': 'Perfect! Let me find the best matches for you!', 'ready_to_match': True, 'next_question': None, 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week | Location: Boston'}
+
+🔍 Step 1: Filtering by service type: haircut in Boston
+✅ Found 9 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 2 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 2 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 1 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 2 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 2 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Salon Mario Russo
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+🔍 Checking availability for: Salon Mario Russo
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 2
+   Total available slots: 36
+INFO:     127.0.0.1:42720 - "POST /api/preferences/chat HTTP/1.1" 200 OK

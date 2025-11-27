@@ -90,7 +90,7 @@ class ServiceFilterTool(BaseModel):
                            m.location_lat, m.location_lon, m.city, m.state,
                            m.phone, m.address, m.photo_url as merchant_photo,
                            m.price_range, m.photos, m.specialties, m.stylist_names,
-                           m.booking_url, m.yelp_url, m.bio
+                           m.booking_url, m.yelp_url, m.bio, m.data_source
                     FROM services s
                     JOIN merchants m ON s.merchant_id = m.id
                     WHERE s.is_active = true
@@ -149,7 +149,8 @@ class ServiceFilterTool(BaseModel):
                         "stylist_names": row[21] if len(row) > 21 else [],
                         "booking_url": row[22] if len(row) > 22 else "",
                         "yelp_url": row[23] if len(row) > 23 else "",
-                        "bio": row[24] if len(row) > 24 else ""
+                        "bio": row[24] if len(row) > 24 else "",
+                        "data_source": row[25] if len(row) > 25 else "manual"
                     }
                     matching_services.append(service_dict)
 
@@ -543,7 +544,7 @@ class ProviderStatusCheckerTool(BaseModel):
                                address, city, state, zip_code, service_category,
                                rating, total_reviews, is_verified, photo_url, bio,
                                years_experience, yelp_id, price_range, photos, specialties,
-                               stylist_names, booking_url, yelp_url
+                               stylist_names, booking_url, yelp_url, data_source
                         FROM merchants
                         WHERE id = :provider_id
                     """)
@@ -608,7 +609,8 @@ class ProviderStatusCheckerTool(BaseModel):
                             "specialties": row[20] if len(row) > 20 else [],
                             "stylist_names": row[21] if len(row) > 21 else [],
                             "booking_url": row[22] if len(row) > 22 else "",
-                            "yelp_url": row[23] if len(row) > 23 else ""
+                            "yelp_url": row[23] if len(row) > 23 else "",
+                            "data_source": row[24] if len(row) > 24 else "manual"
                         }
                         valid_providers.append(provider_dict)
 

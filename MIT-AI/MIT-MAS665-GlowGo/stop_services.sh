@@ -38,3 +38,4 @@ echo "=== Services Stopped ==="
 echo "Logs are still available at: $LOGS_DIR/"
 
 
+

@@ -4,6 +4,8 @@
 # This script starts both the backend and frontend services with logging
 
 # Get the directory where this script is located
+BACKEND_PID=''
+FRONTEND_PID=''
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$SCRIPT_DIR/glowgo-backend"
 FRONTEND_DIR="$SCRIPT_DIR/glowgo-frontend"
@@ -15,6 +17,17 @@ mkdir -p "$LOGS_DIR"
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Function to kill backend
+kill_backend() {
+    if [ -n "$BACKEND_PID" ]; then
+        echo "Killing backend process $BACKEND_PID..."
+        kill $BACKEND_PID
+        BACKEND_PID=''
+    else
+        lsof -i :8000 | awk 'NR>1 {print $2}' | xargs kill -9
+    fi
 }
 
 # Function to start backend
@@ -37,6 +50,17 @@ start_backend() {
     BACKEND_PID=$!
     echo "Backend started with PID: $BACKEND_PID"
     echo "Backend logs: $LOGS_DIR/backend.log"
+}
+
+# Function to kill frontend
+kill_frontend() {
+    if [ -n "$FRONTEND_PID" ]; then
+        echo "Killing frontend process $FRONTEND_PID..."
+        kill $FRONTEND_PID
+        FRONTEND_PID=''
+    else
+        lsof -i :3000 | awk 'NR>1 {print $2}' | xargs kill -9
+    fi
 }
 
 # Function to start frontend
@@ -83,5 +107,6 @@ echo "Backend URL: http://localhost:8000"
 echo "Frontend URL: http://localhost:3000"
 echo ""
 echo "=== GlowGo is running! ==="
+
 
 
