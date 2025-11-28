@@ -56,7 +56,10 @@ export default function PreferenceSummary({ preferences, readyToMatch }: Prefere
             {(() => {
               // Display new time format (preferred_date, preferred_time, time_constraint)
               if (preferences.preferred_date) {
-                const date = new Date(preferences.preferred_date)
+                // Parse YYYY-MM-DD manually to ensure local time (avoiding UTC midnight shift)
+                const [year, month, day] = preferences.preferred_date.split('-').map(Number)
+                const date = new Date(year, month - 1, day)
+
                 const dateStr = date.toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',

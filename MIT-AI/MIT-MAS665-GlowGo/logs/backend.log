@@ -1,14 +1,20 @@
 INFO:     Will watch for changes in these directories: ['/home/vitaly/MIT-MAS665-GlowGo/MIT-AI/MIT-MAS665-GlowGo/glowgo-backend']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [150230] using WatchFiles
-INFO:     Started server process [150367]
+INFO:     Started reloader process [167404] using WatchFiles
+INFO:     Started server process [167544]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 🚀 GlowGo Backend Starting...
 📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-INFO:     127.0.0.1:49282 - "OPTIONS /api/auth/google-login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49282 - "POST /api/auth/google-login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49298 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56300 - "OPTIONS /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56300 - "POST /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56300 - "OPTIONS /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56308 - "OPTIONS /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56308 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56300 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43562 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
+BrightData scraping error: Client error '401 Unauthorized' for url 'https://api.brightdata.com/request'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
 
 [ConversationAgent] Step 1: Parsing intent from message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
 [ConversationAgent] Current preferences before intent parsing: {'service_type': None, 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
@@ -21,7 +27,7 @@ INFO:     127.0.0.1:49298 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
 [PreferenceExtractor] Processing message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
 [DateTimeExtractor] Processing text: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
 [DateTimeExtractor] After time word conversion: 'i want haircut next week on monday. up to 60$. in boston area.'
-[DateTimeExtractor] Found 'next week': 2025-12-01 (Monday)
+[DateTimeExtractor] Found monday → date: 2025-12-01 (days_ahead: 3, is_next_week: True)
 [DateTimeExtractor] Final result: {'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None}
 [PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'location': 'Boston'}
 [ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
@@ -43,292 +49,41 @@ INFO:     127.0.0.1:49298 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
 [ConversationAgent] Readiness result: {'ready_to_match': True, 'missing_fields': [], 'completeness': 0.8}
 [ConversationAgent] Ready to match: True, Missing: []
 
-[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}, 'response_to_user': 'Perfect! Let me find the best matches for you!', 'ready_to_match': True, 'next_question': None, 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week | Location: Boston'}
-
-🔍 Step 1: Filtering by service type: haircut in Boston
-✅ Found 9 matching services
-⏭️  Step 2: Skipping location filter (no user location)
-💰 Step 3: Filtering by budget ($0 - $60.0)
-✅ 2 services within budget
-📅 Step 4: Filtering by availability (urgency: week)
-✅ 2 providers available
-🔐 Step 5: Checking provider status and quality
-✅ 1 high-quality providers validated
-🎯 Step 6: Aggregating final candidates
-🎉 Found 2 final candidates (avg quality: 0.83)
-📅 Availability Agent: Checking 2 candidates
-   Service duration: 30 minutes
-   Time urgency: week
-
-🔍 Checking availability for: Salon Mario Russo
-   Step 1: Querying calendar...
-   Found 36 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 36 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
-   Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
-
-🔍 Checking availability for: Salon Mario Russo
-   Step 1: Querying calendar...
-   Found 36 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 36 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
-   Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
-
-📊 Availability Summary:
-   Providers with availability: 2
-   Total available slots: 36
-INFO:     127.0.0.1:49298 - "POST /api/preferences/chat HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'services/tools/data_collection_tools.py', 'routers/matches.py', 'services/tools/matching_tools.py', 'schemas/matches.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [150367]
-👋 GlowGo Backend Shutting Down...
-INFO:     Started server process [151088]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [151088]
-🚀 GlowGo Backend Starting...
-📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-👋 GlowGo Backend Shutting Down...
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Started server process [152529]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [152529]
-🚀 GlowGo Backend Starting...
-📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-👋 GlowGo Backend Shutting Down...
-INFO:     Started server process [152621]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [152621]
-🚀 GlowGo Backend Starting...
-📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-👋 GlowGo Backend Shutting Down...
-INFO:     Started server process [152662]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [152662]
-🚀 GlowGo Backend Starting...
-📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-👋 GlowGo Backend Shutting Down...
-INFO:     Started server process [152705]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-🚀 GlowGo Backend Starting...
-📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-INFO:     127.0.0.1:50328 - "OPTIONS /api/auth/google-login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50328 - "POST /api/auth/google-login HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41844 - "OPTIONS /api/voice/text-to-speech HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41844 - "POST /api/voice/text-to-speech HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41848 - "OPTIONS /api/voice/speech-to-text HTTP/1.1" 200 OK
-[STT] Received audio: recording.webm, 140366 bytes, audio/webm;codecs=opus
-[STT] Calling ElevenLabs: https://api.elevenlabs.io/v1/speech-to-text
-[STT] File size: 140366 bytes
-[STT] Content type: audio/webm;codecs=opus
-[STT] Response status: 200
-[STT] Full response: {'language_code': 'eng', 'language_probability': 0.9146721959114075, 'text': "Hi I need a haircut up to sixty dollars I'm living in fifty-three Wheeler Street in Cambridge", 'words': [{'text': 'Hi', 'start': 1.22, 'end': 1.599, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.599, 'end': 1.719, 'type': 'spacing', 'logprob': 0.0}, {'text': 'I', 'start': 1.719, 'end': 1.879, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.879, 'end': 1.899, 'type': 'spacing', 'logprob': 0.0}, {'text': 'need', 'start': 1.899, 'end': 2.039, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 2.039, 'end': 2.059, 'type': 'spacing', 'logprob': 0.0}, {'text': 'a', 'start': 2.059, 'end': 2.139, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 2.139, 'end': 2.159, 'type': 'spacing', 'logprob': 0.0}, {'text': 'haircut', 'start': 2.159, 'end': 2.799, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 2.799, 'end': 2.839, 'type': 'spacing', 'logprob': 0.0}, {'text': 'up', 'start': 2.839, 'end': 3.019, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 3.019, 'end': 3.019, 'type': 'spacing', 'logprob': 0.0}, {'text': 'to', 'start': 3.019, 'end': 3.159, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 3.159, 'end': 3.179, 'type': 'spacing', 'logprob': 0.0}, {'text': 'sixty', 'start': 3.179, 'end': 3.519, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 3.519, 'end': 3.539, 'type': 'spacing', 'logprob': 0.0}, {'text': 'dollars', 'start': 3.539, 'end': 4.139, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 4.139, 'end': 4.559, 'type': 'spacing', 'logprob': 0.0}, {'text': "I'm", 'start': 4.559, 'end': 4.719, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 4.719, 'end': 4.739, 'type': 'spacing', 'logprob': 0.0}, {'text': 'living', 'start': 4.739, 'end': 5.079, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 5.079, 'end': 5.119, 'type': 'spacing', 'logprob': 0.0}, {'text': 'in', 'start': 5.119, 'end': 5.299, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 5.299, 'end': 5.319, 'type': 'spacing', 'logprob': 0.0}, {'text': 'fifty-three', 'start': 5.319, 'end': 5.819, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 5.819, 'end': 5.959, 'type': 'spacing', 'logprob': 0.0}, {'text': 'Wheeler', 'start': 5.96, 'end': 6.239, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 6.239, 'end': 6.339, 'type': 'spacing', 'logprob': 0.0}, {'text': 'Street', 'start': 6.339, 'end': 6.619, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 6.619, 'end': 6.639, 'type': 'spacing', 'logprob': 0.0}, {'text': 'in', 'start': 6.639, 'end': 6.759, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 6.759, 'end': 6.779, 'type': 'spacing', 'logprob': 0.0}, {'text': 'Cambridge', 'start': 6.779, 'end': 8.679, 'type': 'word', 'logprob': 0.0}], 'transcription_id': 'cp1Lzqe4tsc94dzwDelp'}
-[STT] Recognized: 'Hi I need a haircut up to sixty dollars I'm living in fifty-three Wheeler Street in Cambridge'
-INFO:     127.0.0.1:41848 - "POST /api/voice/speech-to-text HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41848 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
-
-[ConversationAgent] Step 1: Parsing intent from message: 'Hi I need a haircut up to sixty dollars I'm living in fifty-three Wheeler Street in Cambridge'
-[ConversationAgent] Current preferences before intent parsing: {'service_type': None, 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
-[ConversationAgent] Intent result: {'service_type': 'haircut', 'confidence': 0.95}
-[ConversationAgent] Updated service_type to: haircut
-[ConversationAgent] Current preferences after intent parsing: {'service_type': 'haircut', 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
-
-[ConversationAgent] Step 2: Extracting preferences
-
-[PreferenceExtractor] Processing message: 'Hi I need a haircut up to sixty dollars I'm living in fifty-three Wheeler Street in Cambridge'
-[DateTimeExtractor] Processing text: 'Hi I need a haircut up to sixty dollars I'm living in fifty-three Wheeler Street in Cambridge'
-[DateTimeExtractor] After time word conversion: 'hi i need a haircut up to sixty dollars i'm living in fifty-three wheeler street in cambridge'
-[DateTimeExtractor] Final result: {'preferred_date': None, 'preferred_time': None, 'time_constraint': None}
-[PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'location': 'Cambridge'}
-[ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': None, 'artisan_preference': None, 'special_notes': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'location': 'Cambridge'}
-[ConversationAgent] Merged extracted_preferences: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': None, 'artisan_preference': None, 'special_notes': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'location': 'Cambridge'}
-
-[ConversationAgent] Step 3: Checking readiness
-
-[ReadinessDetector] Checking preferences:
-  service_type: haircut
-  budget: 60.0
-  time_urgency: None
-  preferred_date: None
-  preferred_time: None
-  time_constraint: None
-  location: Cambridge
-  has_time_info: False
-[ReadinessDetector] Result: ready_to_match=False, missing_fields=['time_info']
-
-[ConversationAgent] Readiness result: {'ready_to_match': False, 'missing_fields': ['time_info'], 'completeness': 0.6}
-[ConversationAgent] Ready to match: False, Missing: ['time_info']
-
-[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': None, 'artisan_preference': None, 'special_notes': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'location': 'Cambridge'}, 'response_to_user': 'Great! A haircut in Cambridge for up to $60. When are you looking to get this done?', 'ready_to_match': False, 'next_question': 'time_info', 'conversation_context': 'Service: haircut | Budget: $60.0 | Location: Cambridge'}
-
-INFO:     127.0.0.1:41848 - "POST /api/preferences/chat HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41848 - "POST /api/voice/text-to-speech HTTP/1.1" 200 OK
-[STT] Received audio: recording.webm, 72746 bytes, audio/webm;codecs=opus
-[STT] Calling ElevenLabs: https://api.elevenlabs.io/v1/speech-to-text
-[STT] File size: 72746 bytes
-[STT] Content type: audio/webm;codecs=opus
-[STT] Response status: 200
-[STT] Full response: {'language_code': 'eng', 'language_probability': 0.991203784942627, 'text': "I'd like to have it done next week on Tuesday", 'words': [{'text': "I'd", 'start': 0.879, 'end': 1.059, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.059, 'end': 1.12, 'type': 'spacing', 'logprob': 0.0}, {'text': 'like', 'start': 1.12, 'end': 1.239, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.239, 'end': 1.279, 'type': 'spacing', 'logprob': 0.0}, {'text': 'to', 'start': 1.279, 'end': 1.339, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.339, 'end': 1.399, 'type': 'spacing', 'logprob': 0.0}, {'text': 'have', 'start': 1.399, 'end': 1.579, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.579, 'end': 1.579, 'type': 'spacing', 'logprob': 0.0}, {'text': 'it', 'start': 1.579, 'end': 1.679, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.679, 'end': 1.699, 'type': 'spacing', 'logprob': 0.0}, {'text': 'done', 'start': 1.699, 'end': 1.98, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.98, 'end': 2.039, 'type': 'spacing', 'logprob': 0.0}, {'text': 'next', 'start': 2.039, 'end': 2.259, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 2.259, 'end': 2.299, 'type': 'spacing', 'logprob': 0.0}, {'text': 'week', 'start': 2.299, 'end': 2.499, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 2.499, 'end': 2.539, 'type': 'spacing', 'logprob': 0.0}, {'text': 'on', 'start': 2.539, 'end': 2.659, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 2.659, 'end': 2.699, 'type': 'spacing', 'logprob': 0.0}, {'text': 'Tuesday', 'start': 2.7, 'end': 4.48, 'type': 'word', 'logprob': 0.0}], 'transcription_id': 'R8LstTHO5hxz8XDuNYC1'}
-[STT] Recognized: 'I'd like to have it done next week on Tuesday'
-INFO:     127.0.0.1:33866 - "POST /api/voice/speech-to-text HTTP/1.1" 200 OK
-
-[ConversationAgent] Step 1: Parsing intent from message: 'I'd like to have it done next week on Tuesday'
-[ConversationAgent] Current preferences before intent parsing: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
-[ConversationAgent] Intent result: {'service_type': None, 'confidence': 0.0}
-[ConversationAgent] Current preferences after intent parsing: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
-
-[ConversationAgent] Step 2: Extracting preferences
-
-[PreferenceExtractor] Processing message: 'I'd like to have it done next week on Tuesday'
-[DateTimeExtractor] Processing text: 'I'd like to have it done next week on Tuesday'
-[DateTimeExtractor] After time word conversion: 'i'd like to have it done next week on tuesday'
-[DateTimeExtractor] Found 'next week': 2025-12-01 (Monday)
-[DateTimeExtractor] Final result: {'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None}
-[PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01'}
-[ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': None}
-[ConversationAgent] Merged extracted_preferences: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': None}
-
-[ConversationAgent] Step 3: Checking readiness
-
-[ReadinessDetector] Checking preferences:
-  service_type: haircut
-  budget: 60.0
-  time_urgency: week
-  preferred_date: 2025-12-01
-  preferred_time: None
-  time_constraint: None
-  location: None
-  has_time_info: True
-[ReadinessDetector] Result: ready_to_match=False, missing_fields=['location']
-
-[ConversationAgent] Readiness result: {'ready_to_match': False, 'missing_fields': ['location'], 'completeness': 0.6}
-[ConversationAgent] Ready to match: False, Missing: ['location']
-
-[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': None}, 'response_to_user': "Great! You're looking for a haircut next Tuesday, December 2nd, with a budget of $60. To help me find the best options, would you prefer Boston or Cambridge?", 'ready_to_match': False, 'next_question': 'location', 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week'}
-
-INFO:     127.0.0.1:33866 - "POST /api/preferences/chat HTTP/1.1" 200 OK
-INFO:     127.0.0.1:33866 - "POST /api/voice/text-to-speech HTTP/1.1" 200 OK
-[STT] Received audio: recording.webm, 64052 bytes, audio/webm;codecs=opus
-[STT] Calling ElevenLabs: https://api.elevenlabs.io/v1/speech-to-text
-[STT] File size: 64052 bytes
-[STT] Content type: audio/webm;codecs=opus
-[STT] Response status: 200
-[STT] Full response: {'language_code': 'eng', 'language_probability': 0.9498241543769836, 'text': 'I already stated I want it in Cambridge', 'words': [{'text': 'I', 'start': 0.119, 'end': 0.34, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 0.34, 'end': 0.34, 'type': 'spacing', 'logprob': 0.0}, {'text': 'already', 'start': 0.34, 'end': 0.779, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 0.779, 'end': 0.779, 'type': 'spacing', 'logprob': 0.0}, {'text': 'stated', 'start': 0.779, 'end': 1.199, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.199, 'end': 1.199, 'type': 'spacing', 'logprob': 0.0}, {'text': 'I', 'start': 1.199, 'end': 1.339, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.339, 'end': 1.339, 'type': 'spacing', 'logprob': 0.0}, {'text': 'want', 'start': 1.339, 'end': 1.579, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.579, 'end': 1.599, 'type': 'spacing', 'logprob': 0.0}, {'text': 'it', 'start': 1.599, 'end': 1.699, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.699, 'end': 1.719, 'type': 'spacing', 'logprob': 0.0}, {'text': 'in', 'start': 1.719, 'end': 1.839, 'type': 'word', 'logprob': 0.0}, {'text': ' ', 'start': 1.839, 'end': 1.859, 'type': 'spacing', 'logprob': 0.0}, {'text': 'Cambridge', 'start': 1.86, 'end': 3.94, 'type': 'word', 'logprob': 0.0}], 'transcription_id': 'sBdICnnhekfczCmacLro'}
-[STT] Recognized: 'I already stated I want it in Cambridge'
-INFO:     127.0.0.1:33876 - "POST /api/voice/speech-to-text HTTP/1.1" 200 OK
-BrightData scraping error: Client error '401 Unauthorized' for url 'https://api.brightdata.com/request'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
-
-[ConversationAgent] Step 1: Parsing intent from message: 'I already stated I want it in Cambridge'
-[ConversationAgent] Current preferences before intent parsing: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
-[ConversationAgent] Intent result: {'service_type': None, 'confidence': 0.0}
-[ConversationAgent] Current preferences after intent parsing: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
-
-[ConversationAgent] Step 2: Extracting preferences
-
-[PreferenceExtractor] Processing message: 'I already stated I want it in Cambridge'
-[DateTimeExtractor] Processing text: 'I already stated I want it in Cambridge'
-[DateTimeExtractor] After time word conversion: 'i already stated i want it in cambridge'
-[DateTimeExtractor] Final result: {'preferred_date': None, 'preferred_time': None, 'time_constraint': None}
-[PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'location': 'Cambridge'}
-[ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Cambridge'}
-[ConversationAgent] Merged extracted_preferences: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Cambridge'}
-
-[ConversationAgent] Step 3: Checking readiness
-
-[ReadinessDetector] Checking preferences:
-  service_type: haircut
-  budget: 60.0
-  time_urgency: week
-  preferred_date: 2025-12-01
-  preferred_time: None
-  time_constraint: None
-  location: Cambridge
-  has_time_info: True
-[ReadinessDetector] Result: ready_to_match=True, missing_fields=[]
-
-[ConversationAgent] Readiness result: {'ready_to_match': True, 'missing_fields': [], 'completeness': 0.8}
-[ConversationAgent] Ready to match: True, Missing: []
-
 [ConversationAgent] Ready to match! Triggering live search...
-[ConversationAgent] Refined location: Cambridge
+[ConversationAgent] Refined location: Boston, MA, USA
 [ConversationAgent] Found 6 providers
 [ConversationAgent] Saved/Updated 6 providers to database
 
-[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Cambridge'}, 'response_to_user': "Hello there! Looking for a haircut in Cambridge? I'm GlowGo, and I've found some great options for you.\n\nWe've checked online sources like Yelp and Google to make sure our database is up-to-date, and here are a few highly-rated salons:\n\n1.  **Directors Hair** (5.0★) - 8-9 Green St, Cambridge CB2 3JU, United Kingdom\n2.  **Butterfly Hair Salon** (5.0★) - 91 King Street, Cambridge CB1 1LD, United Kingdom\n3.  **Romsey Barbers** (5.0★) - 2a Thoday Street, Cambridge CB1 3AS, United Kingdom\n4.  **Diane Hair International** (4.8★) - 4/5 Cobbles Yard, Grafton Centre Napier Street, Cambridge CB1 1HP, United Kingdom\n5.  **Fratelli Ladies & Mens Hair Salon** (4.5★) - 215 Mill Road, Cambridge CB1 3BE, United Kingdom\n\nWould you like to book an appointment with any of these, or would you prefer to refine your search in any way?", 'ready_to_match': True, 'next_question': None, 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week | Location: Cambridge'}
+[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}, 'response_to_user': 'Here are some haircut options we found for you in Boston:\n\n1. 3L Barber Co (5.0★) - 518 Tremont St, Boston, MA 02116 [Source: Yelp]\n2. Street Salon & Barbershop (4.9★) - 164 Newbury St, Boston, MA 02116 [Source: Yelp]\n3. S.A.S. Salon (4.8★) - 438 Commercial St, Boston, MA 02109 [Source: Yelp]\n4. Scott Hair (4.7★) - Boston, MA 02111 [Source: Yelp]\n5. En Salon (4.7★) - 135 Cypress St, Brookline, MA 02445 [Source: Yelp]\n\nWe checked online sources (Google/Yelp) and updated our database. Would you like to book an appointment?', 'ready_to_match': True, 'next_question': None, 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week | Location: Boston'}
 
-🔍 Step 1: Filtering by service type: haircut in Cambridge
-✅ Found 15 matching services
+🔍 Step 1: Filtering by service type: haircut in Boston
+✅ Found 14 matching services
 ⏭️  Step 2: Skipping location filter (no user location)
 💰 Step 3: Filtering by budget ($0 - $60.0)
-✅ 12 services within budget
+✅ 7 services within budget
 📅 Step 4: Filtering by availability (urgency: week)
-✅ 12 providers available
+✅ 7 providers available
 🔐 Step 5: Checking provider status and quality
-✅ 7 high-quality providers validated
+✅ 6 high-quality providers validated
 🎯 Step 6: Aggregating final candidates
-🎉 Found 12 final candidates (avg quality: 0.83)
-📅 Availability Agent: Checking 10 candidates
+🎉 Found 7 final candidates (avg quality: 0.84)
+📅 Availability Agent: Checking 7 candidates
    Service duration: 30 minutes
    Time urgency: week
 
-🔍 Checking availability for: Romsey Barbers
+🔍 Checking availability for: 3L Barber Co
    Step 1: Querying calendar...
    Found 36 potential slots
    Booked times: 0
    Step 2: Checking working hours...
    Timezone: America/New_York
-   After working hours filter: 18 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 0
-   Step 4: Validating against double-bookings...
-   ✅ 0 conflict-free slots
-
-🔍 Checking availability for: Butterfly Hair Salon
-   Step 1: Querying calendar...
-   Found 36 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 16 slots
+   After working hours filter: 32 slots
    Step 3: Finding slots with 30 min duration...
    Slots with sufficient duration: 16
    Step 4: Validating against double-bookings...
    ✅ 16 conflict-free slots
 
-🔍 Checking availability for: Directors Hair
+🔍 Checking availability for: Street Salon & Barbershop
    Step 1: Querying calendar...
    Found 36 potential slots
    Booked times: 0
@@ -340,7 +95,7 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
    Step 4: Validating against double-bookings...
    ✅ 18 conflict-free slots
 
-🔍 Checking availability for: Cambridge Barbershop
+🔍 Checking availability for: Salon Mario Russo
    Step 1: Querying calendar...
    Found 36 potential slots
    Booked times: 0
@@ -352,7 +107,19 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
    Step 4: Validating against double-bookings...
    ✅ 18 conflict-free slots
 
-🔍 Checking availability for: Cambridge Barbershop
+🔍 Checking availability for: Court Square Styling Shop
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 32 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 16
+   Step 4: Validating against double-bookings...
+   ✅ 16 conflict-free slots
+
+🔍 Checking availability for: Salon Mario Russo
    Step 1: Querying calendar...
    Found 36 potential slots
    Booked times: 0
@@ -364,228 +131,31 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
    Step 4: Validating against double-bookings...
    ✅ 18 conflict-free slots
 
-🔍 Checking availability for: Cambridge Barbershop
+🔍 Checking availability for: S.A.S. Salon
    Step 1: Querying calendar...
    Found 36 potential slots
    Booked times: 0
    Step 2: Checking working hours...
    Timezone: America/New_York
-   After working hours filter: 36 slots
+   After working hours filter: 0 slots
    Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
+   Slots with sufficient duration: 0
    Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
+   ✅ 0 conflict-free slots
 
-🔍 Checking availability for: Cambridge Barbershop
+🔍 Checking availability for: Scott Hair
    Step 1: Querying calendar...
    Found 36 potential slots
    Booked times: 0
    Step 2: Checking working hours...
    Timezone: America/New_York
-   After working hours filter: 36 slots
+   After working hours filter: 32 slots
    Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
+   Slots with sufficient duration: 16
    Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
-
-🔍 Checking availability for: Dellaria Salon Cambridge
-   Step 1: Querying calendar...
-   Found 36 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 36 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
-   Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
-
-🔍 Checking availability for: Floyd's 99 Barbershop
-   Step 1: Querying calendar...
-   Found 36 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 36 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
-   Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
-
-🔍 Checking availability for: Floyd's 99 Barbershop
-   Step 1: Querying calendar...
-   Found 36 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 36 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 18
-   Step 4: Validating against double-bookings...
-   ✅ 18 conflict-free slots
+   ✅ 16 conflict-free slots
 
 📊 Availability Summary:
-   Providers with availability: 9
-   Total available slots: 160
-INFO:     127.0.0.1:33876 - "POST /api/preferences/chat HTTP/1.1" 200 OK
-INFO:     127.0.0.1:33876 - "POST /api/voice/text-to-speech HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49782 - "OPTIONS /api/matches/find HTTP/1.1" 200 OK
-🔍 Step 1: Filtering by service type: haircut in Cambridge
-✅ Found 15 matching services
-⏭️  Step 2: Skipping location filter (no user location)
-💰 Step 3: Filtering by budget ($0 - $60.0)
-✅ 12 services within budget
-📅 Step 4: Filtering by availability (urgency: week)
-✅ 12 providers available
-🔐 Step 5: Checking provider status and quality
-✅ 7 high-quality providers validated
-🎯 Step 6: Aggregating final candidates
-🎉 Found 12 final candidates (avg quality: 0.83)
-📅 Availability Agent: Checking 10 candidates
-   Service duration: 30 minutes
-   Time urgency: week
-
-🔍 Checking availability for: Romsey Barbers
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 102 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 102
-   Step 4: Validating against double-bookings...
-   ✅ 102 conflict-free slots
-
-🔍 Checking availability for: Butterfly Hair Salon
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 112 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 112
-   Step 4: Validating against double-bookings...
-   ✅ 112 conflict-free slots
-
-🔍 Checking availability for: Directors Hair
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 125 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 125
-   Step 4: Validating against double-bookings...
-   ✅ 125 conflict-free slots
-
-🔍 Checking availability for: Cambridge Barbershop
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-🔍 Checking availability for: Cambridge Barbershop
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-🔍 Checking availability for: Cambridge Barbershop
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-🔍 Checking availability for: Cambridge Barbershop
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-🔍 Checking availability for: Dellaria Salon Cambridge
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-🔍 Checking availability for: Floyd's 99 Barbershop
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-🔍 Checking availability for: Floyd's 99 Barbershop
-   Step 1: Querying calendar...
-   Found 144 potential slots
-   Booked times: 0
-   Step 2: Checking working hours...
-   Timezone: America/New_York
-   After working hours filter: 120 slots
-   Step 3: Finding slots with 30 min duration...
-   Slots with sufficient duration: 120
-   Step 4: Validating against double-bookings...
-   ✅ 120 conflict-free slots
-
-📊 Availability Summary:
-   Providers with availability: 10
-   Total available slots: 1179
-INFO:     127.0.0.1:49782 - "POST /api/matches/find HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [152705]
-👋 GlowGo Backend Shutting Down...
-INFO:     Started server process [155056]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'services/agents/conversation_agent.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [155056]
-🚀 GlowGo Backend Starting...
-📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
-👋 GlowGo Backend Shutting Down...
-INFO:     Started server process [155257]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+   Providers with availability: 6
+   Total available slots: 102
+INFO:     127.0.0.1:43562 - "POST /api/preferences/chat HTTP/1.1" 200 OK

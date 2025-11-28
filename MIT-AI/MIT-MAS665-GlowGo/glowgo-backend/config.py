@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # Google Gemini AI
     GOOGLE_GEMINI_API_KEY: str
-    GOOGLE_GEMINI_MODEL: str = "gemini-2.0-flash"
+    GOOGLE_GEMINI_MODEL: str = "gemini-2.5-flash"
 
     # OpenAI (optional fallback)
     OPENAI_API_KEY: str | None = None
@@ -41,29 +41,19 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
-        extra = "ignore"  # Ignore extra fields in .env
+        extra = "ignore"
 
-
-# Global settings instance
 settings = Settings()
 
-
-# CrewAI Configuration
-class CrewAIConfig:
-    """CrewAI Multi-Agent System Configuration"""
-    # Prefer a stable, generally available model over experimental to avoid quota=0 on free tier
-    LLM_MODEL = "gemini-2.0-flash"
+class CrewConfig:
+    """Configuration for CrewAI agents"""
+    LLM_MODEL = settings.GOOGLE_GEMINI_MODEL
     LLM_TEMPERATURE = 0.7
-    LLM_MAX_TOKENS = 2000
-    # Limit retries to avoid long delays on quota errors
-    LLM_MAX_RETRIES = 0
-    OPENAI_FALLBACK_MODEL = "gpt-4o-mini"
+    LLM_MAX_TOKENS = 2048
     AGENT_MEMORY = True
     AGENT_VERBOSE = True
-    CREW_PROCESS = "sequential"
-    MAX_ITERATIONS = 10
+    MAX_ITERATIONS = 3
+    OPENAI_FALLBACK_MODEL = settings.OPENAI_MODEL
+    LLM_MAX_RETRIES = 2
 
-
-# Global CrewAI config instance
-crew_config = CrewAIConfig()
-
+crew_config = CrewConfig()

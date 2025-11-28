@@ -48,7 +48,7 @@ export default function LandingPage() {
                 What It Costs to Treat Yourself ?
               </h1>
               <p className="text-[16px] leading-relaxed text-[#4a4845] md:text-[18px]">
-                In top cities like New York and Boston, the average cost for a day of self-care is $383–$436, but finding and booking reliable beauty or wellness services remains stressful and inefficient for busy professionals and students.
+                In top cities like New York and Boston, the average cost for a day of self-care is $400, but finding and booking reliable beauty or wellness services remains stressful and inefficient for busy professionals and students.
               </p>
             </div>
             <div className="relative aspect-[4/5]">
@@ -83,7 +83,7 @@ export default function LandingPage() {
                 Why do 95 million Americans struggle to get convenient, trustworthy self-care bookings?
               </h2>
               <p className="text-[15px] leading-relaxed text-[#4a4845] md:text-[17px]">
-                22-23% of appointments are scheduled within a week, but most platforms can't surface last-minute opportunities, causing thousands of missed bookings daily.
+                23% of appointments are scheduled within a week, but most platforms can't surface last-minute opportunities, causing thousands of missed bookings daily.
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function LandingPage() {
             </div>
           </div>
           <p className="text-[15px] leading-relaxed text-[#4a4845] md:text-[17px]">
-            Existing solutions force users to complete endless forms and rely on static provider lists, leaving discovery and booking fragmented. Providers lose up to 15-30% revenue to idle slots and no-shows. Only top salons manage to bring 56% more first-timers back for a second visit—the rest see just 45% retention.
+            Existing solutions force users to complete endless forms and rely on static provider lists, leaving discovery and booking fragmented. Providers may lose up to 30% revenue to idle slots and no-shows. Only top salons manage to bring 56% more first-timers back for a second visit, the rest see just 45% retention.
           </p>
         </div>
       </section>

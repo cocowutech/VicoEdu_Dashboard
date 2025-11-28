@@ -23,6 +23,7 @@ from services.tools.data_collection_tools import merchant_storage_tool
 import asyncio
 import json
 
+from services.tools.calendar_tools import google_calendar_tool
 
 class ConversationAgent:
     """
@@ -76,7 +77,8 @@ class ConversationAgent:
         self,
         user_message: str,
         conversation_history: List[Dict[str, str]],
-        current_preferences: Dict[str, Any]
+        current_preferences: Dict[str, Any],
+        user_id: str = None
     ) -> Dict[str, Any]:
         """
         Execute conversation agent workflow
@@ -85,6 +87,7 @@ class ConversationAgent:
             user_message: User's current message
             conversation_history: Previous messages
             current_preferences: Already extracted preferences
+            user_id: Optional User ID to check calendar availability
             
         Returns:
             dict: {
@@ -119,6 +122,11 @@ class ConversationAgent:
 
             # Step 2: Extract Preferences (budget, urgency, provider pref)
             print(f"\n[ConversationAgent] Step 2: Extracting preferences")
+            
+            # Preserve location if already found
+            if current_preferences.get("location"):
+                print(f"[ConversationAgent] Preserving existing location: {current_preferences.get('location')}")
+            
             preference_result = preference_extractor_tool.execute({
                 "message": user_message,
                 "current_preferences": current_preferences
@@ -159,6 +167,12 @@ class ConversationAgent:
                 if preference_result.get("location") is not None
                 else current_preferences.get("location"),
             }
+            
+            # Double-check location persistence
+            if current_preferences.get("location") and not extracted_preferences.get("location"):
+                print(f"[ConversationAgent] Restoring lost location: {current_preferences.get('location')}")
+                extracted_preferences["location"] = current_preferences.get("location")
+                
             print(f"[ConversationAgent] Merged extracted_preferences: {extracted_preferences}")
             
             # Step 3: Check Readiness (do we have enough info?)
@@ -172,6 +186,25 @@ class ConversationAgent:
             missing_fields = readiness_result.get("missing_fields", [])
             print(f"[ConversationAgent] Ready to match: {ready_to_match}, Missing: {missing_fields}")
             
+            # Step 3.5: Check Calendar Availability if time is mentioned
+            calendar_context = ""
+            if user_id and extracted_preferences.get("preferred_date"):
+                print(f"\n[ConversationAgent] Checking calendar for user {user_id}")
+                try:
+                    calendar_check = await asyncio.to_thread(
+                        google_calendar_tool._run,
+                        {
+                            "user_id": user_id,
+                            "date": extracted_preferences.get("preferred_date"),
+                            "time": extracted_preferences.get("preferred_time")
+                        }
+                    )
+                    if "Error" not in calendar_check:
+                        calendar_context = f"\n\nCALENDAR CHECK: {calendar_check}"
+                        print(f"[ConversationAgent] Calendar info: {calendar_context}")
+                except Exception as e:
+                    print(f"[ConversationAgent] Calendar check failed: {e}")
+
             # Step 4: Generate Response
             if ready_to_match:
                 # We have all required info! Trigger live search
@@ -244,8 +277,13 @@ We found these options online (verified live):
 
 {options_text}
 
-Please present these options to the user nicely. Mention that we checked online sources (Google/Yelp) and updated our database.
-Ask if they would like to book any of these or refine the search.
+Please present these options to the user.
+CRITICAL INSTRUCTIONS:
+1. Keep the response concise and to the point. Avoid unnecessary filler words.
+2. Do NOT use markdown bolding (**) or italics (*) for the business names or any other text. Just write the names normally.
+3. Mention briefly that we checked online sources (Google/Yelp) and updated our database.
+4. Do NOT ask if they want to refine the search. Assume they want to book one of these.
+5. Ask simply "Would you like to book an appointment?"
 """
                 
                 try:
@@ -263,13 +301,25 @@ Ask if they would like to book any of these or refine the search.
                     "missing_fields": missing_fields
                 })
                 
-                # Use Gemini to make the question more natural
-                # Show ALL time-related info
                 time_info_parts = []
                 if extracted_preferences.get('preferred_date'):
-                    time_info_parts.append(f"Date: {extracted_preferences.get('preferred_date')}")
+                    # Format date nicely if it's ISO format
+                    try:
+                        d = datetime.fromisoformat(extracted_preferences.get('preferred_date'))
+                        formatted_date = d.strftime("%A, %B %d")
+                        time_info_parts.append(f"Date: {formatted_date}")
+                    except:
+                        time_info_parts.append(f"Date: {extracted_preferences.get('preferred_date')}")
+                        
                 if extracted_preferences.get('preferred_time'):
-                    time_info_parts.append(f"Time: {extracted_preferences.get('preferred_time')}")
+                    # Format time nicely
+                    try:
+                        t = datetime.strptime(extracted_preferences.get('preferred_time'), "%H:%M")
+                        formatted_time = t.strftime("%I:%M %p")
+                        time_info_parts.append(f"Time: {formatted_time}")
+                    except:
+                        time_info_parts.append(f"Time: {extracted_preferences.get('preferred_time')}")
+                        
                 if extracted_preferences.get('time_constraint'):
                     time_info_parts.append(f"Constraint: {extracted_preferences.get('time_constraint')}")
                 if extracted_preferences.get('time_urgency'):
@@ -280,6 +330,7 @@ Ask if they would like to book any of these or refine the search.
                 prompt = f"""You are GlowGo, a friendly AI assistant helping users find beauty services in Boston/Cambridge.
 
 CURRENT DATE/TIME: {current_date} at {current_time}
+{calendar_context}
 
 User said: "{user_message}"
 
@@ -294,7 +345,8 @@ We need to ask: {question_result.get('question')}
 Generate a SHORT (1-2 sentences), FRIENDLY response that:
 1. Acknowledges what they said
 2. Asks the next question naturally
-3. Uses the current date/time context if relevant (e.g., if they say "today" and it's Thursday, you know that's Thursday)
+3. Uses the current date/time context if relevant
+4. If calendar info is available, mention if they are free or busy at the requested time.
 
 Be warm and conversational."""
 

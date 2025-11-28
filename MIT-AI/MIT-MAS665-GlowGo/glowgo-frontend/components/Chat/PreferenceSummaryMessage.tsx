@@ -50,24 +50,43 @@ export default function PreferenceSummaryMessage({
     })
   }
 
-  if (preferences.time_urgency) {
-    preferenceItems.push({
-      label: 'When',
-      value: preferences.time_urgency.charAt(0).toUpperCase() + preferences.time_urgency.slice(1)
-    })
-  }
+  // Prioritize specific date over general urgency
+  if (preferences.preferred_date) {
+    // Parse YYYY-MM-DD manually to ensure local time
+    const [year, month, day] = preferences.preferred_date.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
 
-  if (preferences.preferred_date && preferences.preferred_time) {
-    const dateStr = new Date(preferences.preferred_date).toLocaleDateString('en-US', {
+    const dateStr = date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric'
     })
-    const timeStr = preferences.preferred_time
-    const constraint = preferences.time_constraint || ''
+
+    let timeDisplay = dateStr
+
+    if (preferences.preferred_time) {
+      const [hours, minutes] = preferences.preferred_time.split(':')
+      const hour = parseInt(hours)
+      const ampm = hour >= 12 ? 'PM' : 'AM'
+      const hour12 = hour % 12 || 12
+      timeDisplay += ` at ${hour12}:${minutes} ${ampm}`
+    }
+
+    if (preferences.time_constraint) {
+      const constraint = preferences.time_constraint
+      if (constraint === 'before') timeDisplay = `Before ${timeDisplay}`
+      else if (constraint === 'by') timeDisplay = `By ${timeDisplay}`
+      else if (constraint === 'after') timeDisplay = `After ${timeDisplay}`
+    }
+
     preferenceItems.push({
-      label: 'Preferred Time',
-      value: `${constraint ? constraint + ' ' : ''}${dateStr} at ${timeStr}`
+      label: 'When',
+      value: timeDisplay
+    })
+  } else if (preferences.time_urgency) {
+    preferenceItems.push({
+      label: 'When',
+      value: preferences.time_urgency.charAt(0).toUpperCase() + preferences.time_urgency.slice(1)
     })
   }
 

@@ -6,11 +6,11 @@
    - Local:        http://localhost:3000
    - Environments: .env
 
- ✓ Ready in 2.1s
+ ✓ Ready in 1708ms
  ○ Compiling / ...
- ✓ Compiled / in 3.8s (661 modules)
- ✓ Compiled in 1103ms (298 modules)
+ ✓ Compiled / in 1798ms (661 modules)
  ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
- ○ Compiling /auth/login ...
- ✓ Compiled /auth/login in 587ms (660 modules)
- ✓ Compiled /chat in 462ms (736 modules)
+ ✓ Compiled in 384ms (298 modules)
+ ✓ Compiled /auth/login in 266ms (660 modules)
+ ○ Compiling /chat ...
+ ✓ Compiled /chat in 574ms (738 modules)

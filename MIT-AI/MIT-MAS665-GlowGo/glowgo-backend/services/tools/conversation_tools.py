@@ -666,7 +666,10 @@ class PreferenceExtractorTool(BaseModel):
             print(f"[DateTimeExtractor] Found 'end of week': {result['preferred_date']} (Friday)")
 
         # Check for "next week" (without specific day)
-        elif "next week" in text_lower:
+        # IMPORTANT: Only match "next week" if NO specific day is mentioned.
+        # Otherwise "next week on Monday" gets caught here and returns Monday (generic start of week),
+        # preventing the specific day logic from running.
+        elif "next week" in text_lower and not any(day in text_lower for day in days_of_week):
             # Next week = start of next week (Monday)
             days_until_next_monday = (7 - current_weekday) % 7
             if days_until_next_monday == 0:  # Today is Monday

@@ -1,3 +1,7 @@
+"""
+Authentication schemas for Google OAuth and User management
+"""
+
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
@@ -8,6 +12,7 @@ from datetime import datetime
 class GoogleLoginRequest(BaseModel):
     """Request schema for Google OAuth login"""
     id_token: str = Field(..., description="Google ID token from OAuth flow")
+    access_token: Optional[str] = Field(None, description="Google Access Token for Calendar API")
 
 
 class UserResponse(BaseModel):
@@ -18,58 +23,18 @@ class UserResponse(BaseModel):
     last_name: str
     phone: Optional[str] = None
     profile_photo_url: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
+    created_at: datetime
+    updated_at: datetime
 
 
 class GoogleLoginResponse(BaseModel):
-    """Response schema for successful Google login"""
-    success: bool = True
+    """Response schema for Google login"""
+    success: bool
     access_token: str
-    token_type: str = "bearer"
+    token_type: str
     user: UserResponse
 
 
 class ErrorResponse(BaseModel):
-    """Error response schema"""
-    error: str
+    """Standard error response schema"""
     detail: str
-    code: str
-
-
-# JWT Token Schemas
-
-class Token(BaseModel):
-    """JWT token response schema"""
-    access_token: str
-    token_type: str = "bearer"
-
-
-class TokenData(BaseModel):
-    """Token payload data"""
-    user_id: Optional[str] = None
-    exp: Optional[datetime] = None
-
-
-# User Management Schemas
-
-class UserCreate(BaseModel):
-    """Schema for creating a new user"""
-    email: EmailStr
-    first_name: str
-    last_name: str
-    google_id: Optional[str] = None
-    profile_photo_url: Optional[str] = None
-
-
-class UserUpdate(BaseModel):
-    """Schema for updating user"""
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    phone: Optional[str] = None
-    profile_photo_url: Optional[str] = None
-
-
