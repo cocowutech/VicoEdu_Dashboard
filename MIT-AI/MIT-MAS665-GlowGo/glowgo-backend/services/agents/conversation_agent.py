@@ -18,6 +18,10 @@ from services.tools.conversation_tools import (
     conversation_context_manager_tool,
     readiness_detector_tool
 )
+from services.crews.data_collection_crew import data_collection_crew
+from services.tools.data_collection_tools import merchant_storage_tool
+import asyncio
+import json
 
 
 class ConversationAgent:
@@ -170,8 +174,87 @@ class ConversationAgent:
             
             # Step 4: Generate Response
             if ready_to_match:
-                # We have all required info!
-                response_to_user = "Perfect! Let me find the best matches for you!"
+                # We have all required info! Trigger live search
+                print(f"\n[ConversationAgent] Ready to match! Triggering live search...")
+                
+                service_type = extracted_preferences.get("service_type", "beauty salon")
+                base_location = extracted_preferences.get("location", "Boston, MA")
+                
+                # Refine location using LLM to catch specific addresses (e.g. "53 Wheeler St")
+                search_location = base_location
+                try:
+                    # FORCE "MA, USA" context for Cambridge/Boston
+                    if "MA" not in base_location and "USA" not in base_location:
+                        context_location = f"{base_location}, MA, USA"
+                    else:
+                        context_location = base_location
+
+                    refine_prompt = f"""Extract the exact search location from this message for a map search.
+                    Message: "{user_message}"
+                    Context: User is looking for {service_type} in {context_location}.
+                    If they mentioned a specific street, address, or landmark, return that combined with the city and state (MA, USA).
+                    If not, just return "{context_location}".
+                    IMPORTANT: Always append ", MA, USA" if not present. Do NOT return UK locations.
+                    Return ONLY the location string."""
+                    
+                    refined = await self.llm.ainvoke(refine_prompt)
+                    clean_loc = refined.content.strip().strip('"').strip("'")
+                    if clean_loc:
+                        search_location = clean_loc
+                        print(f"[ConversationAgent] Refined location: {search_location}")
+                    else:
+                         search_location = context_location
+                         
+                except Exception as e:
+                    print(f"[ConversationAgent] Location refinement failed: {e}")
+                    if "MA" not in search_location:
+                        search_location = f"{search_location}, MA, USA"
+
+                # 1. Collect providers from Yelp & Google
+                search_results = await data_collection_crew.collect_providers(
+                    location=search_location,
+                    service_categories=[service_type],
+                    limit_per_category=5  # Keep it focused for chat
+                )
+                
+                providers = search_results.get("providers", [])
+                print(f"[ConversationAgent] Found {len(providers)} providers")
+                
+                # 2. Update database
+                saved_count = 0
+                for provider in providers:
+                    try:
+                        # Run synchronous storage tool in thread
+                        await asyncio.to_thread(merchant_storage_tool._run, provider)
+                        saved_count += 1
+                    except Exception as e:
+                        print(f"Error saving provider {provider.get('business_name')}: {e}")
+                        
+                print(f"[ConversationAgent] Saved/Updated {saved_count} providers to database")
+
+                # 3. Generate response with options
+                # Create a context string with the found providers
+                options_text = ""
+                for i, p in enumerate(providers[:5], 1):
+                    source = p.get('data_source', 'unknown').replace('_', ' ').title()
+                    options_text += f"{i}. {p.get('business_name')} ({p.get('rating')}★) - {p.get('address')} [Source: {source}]\n"
+
+                response_prompt = f"""You are GlowGo. The user asked for {service_type} in {search_location}.
+We found these options online (verified live):
+
+{options_text}
+
+Please present these options to the user nicely. Mention that we checked online sources (Google/Yelp) and updated our database.
+Ask if they would like to book any of these or refine the search.
+"""
+                
+                try:
+                    gemini_response = self.llm.invoke(response_prompt)
+                    response_to_user = gemini_response.content.strip()
+                except Exception as e:
+                    self.logger.warning("Gemini response generation error: %s", e)
+                    response_to_user = f"I found {len(providers)} options for you:\n\n{options_text}\n\nWould you like to book one of these?"
+
                 next_question = None
             else:
                 # Need more info - generate clarifying question
