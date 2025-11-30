@@ -83,7 +83,7 @@ export default function LandingPage() {
                 Why do 95 million Americans struggle to get convenient, trustworthy self-care bookings?
               </h2>
               <p className="text-[15px] leading-relaxed text-[#4a4845] md:text-[17px]">
-                23% of appointments are scheduled within a week, but most platforms can't surface last-minute opportunities, causing thousands of missed bookings daily.
+                23% of appointments are scheduled within a week, but most platforms cannot surface last-minute opportunities, causing thousands of missed bookings daily.
               </p>
             </div>
           </div>

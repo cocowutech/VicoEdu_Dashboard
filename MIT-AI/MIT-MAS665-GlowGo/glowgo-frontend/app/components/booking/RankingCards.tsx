@@ -29,7 +29,7 @@ export default function RankingCards({ options, onSelect }: RankingCardsProps) {
             No Matches Found
           </h3>
           <p className="text-[#757575]">
-            We couldn't find any providers matching your criteria. Try adjusting your
+            We could not find any providers matching your criteria. Try adjusting your
             preferences.
           </p>
         </div>
