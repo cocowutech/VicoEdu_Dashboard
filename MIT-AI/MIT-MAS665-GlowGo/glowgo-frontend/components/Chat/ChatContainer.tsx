@@ -39,18 +39,18 @@ export default function ChatContainer({
             <span className="text-4xl">💬</span>
           </div>
           <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-3">
-            Tell us what's on your mind...
+            Tell us what is on your mind...
           </h2>
           <p className="text-gray-700 mb-6">
-            I'm here to help you find the perfect beauty or wellness service. 
-            Just tell me what you're looking for!
+            I am here to help you find the perfect beauty or wellness service.
+            Just tell me what you are looking for!
           </p>
           <div className="text-sm text-gray-500 space-y-2">
             <p>Try saying:</p>
             <div className="flex flex-wrap gap-2 justify-center">
-              <span className="px-3 py-1 bg-gray-100 rounded-full">"I need a haircut"</span>
-              <span className="px-3 py-1 bg-gray-100 rounded-full">"Book a massage"</span>
-              <span className="px-3 py-1 bg-gray-100 rounded-full">"Get my nails done"</span>
+              <span className="px-3 py-1 bg-gray-100 rounded-full">I need a haircut</span>
+              <span className="px-3 py-1 bg-gray-100 rounded-full">Book a massage</span>
+              <span className="px-3 py-1 bg-gray-100 rounded-full">Get my nails done</span>
             </div>
           </div>
         </div>

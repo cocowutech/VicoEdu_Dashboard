@@ -115,7 +115,7 @@ export default function PreferenceSummaryMessage({
         <div className="flex items-center gap-2 mb-4">
           <span className="text-2xl">✨</span>
           <h3 className="text-lg font-poppins font-semibold text-gray-900">
-            Here's what you're looking for:
+            Here is what you are looking for:
           </h3>
         </div>
 
