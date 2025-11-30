@@ -1,5 +1,50 @@
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
+# FastAPI & Server
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.12
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+alembic>=1.12.0
+
+# Pydantic
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Authentication
+PyJWT>=2.8.0
+python-jose>=3.3.0
+google-auth>=2.29.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.2.0
+
+# Google APIs
+google-api-python-client>=2.100.0
+google-generativeai>=0.5.0
+langchain-google-genai>=1.0.0
+
+# CrewAI
+crewai>=0.30.0
+crewai-tools>=0.2.0
+
+# LangChain
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.0.20
+langchain-openai>=0.0.5
+
+# HTTP Clients
+httpx>=0.25.0
+requests>=2.31.0
+aiohttp>=3.9.0
+
+# External Services
+openai>=1.10.0
+elevenlabs>=0.2.20
+sendgrid>=6.10.0
+
+# Utils
 pytz
+python-dateutil
