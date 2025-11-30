@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
-from routers import health, auth, preferences, matches, voice, data_collection
+from routers import health, auth, preferences, matches, voice, data_collection, calendar
 from config import settings
 
 
@@ -55,6 +55,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(preferences.router, prefix="/api/preferences", tags=["preferences"])
 app.include_router(matches.router, prefix="/api/matches", tags=["matches"])
 app.include_router(voice.router, prefix="/api/voice", tags=["voice"])
+app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(data_collection.router)  # Data collection for real providers
 # Future routers will be mounted here:
 # app.include_router(bookings_router, prefix="/api/bookings", tags=["bookings"])

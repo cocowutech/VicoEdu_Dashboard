@@ -132,7 +132,8 @@ async def find_matching_merchants(
                     stylist_names=option.get("stylist_names", []),
                     booking_url=option.get("booking_url"),
                     bio=option.get("bio"),
-                    yelp_url=option.get("yelp_url")
+                    yelp_url=option.get("yelp_url"),
+                    data_source=option.get("data_source")
                 )
                 ranked_options.append(merchant_option)
             except (ValueError, TypeError) as e:
@@ -261,7 +262,8 @@ async def find_matching_merchants_public(
                     stylist_names=option.get("stylist_names", []),
                     booking_url=option.get("booking_url"),
                     bio=option.get("bio"),
-                    yelp_url=option.get("yelp_url")
+                    yelp_url=option.get("yelp_url"),
+                    data_source=option.get("data_source")
                 )
                 ranked_options.append(merchant_option)
             except (ValueError, TypeError) as e:

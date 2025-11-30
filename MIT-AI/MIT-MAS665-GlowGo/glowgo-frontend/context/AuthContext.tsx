@@ -57,11 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
-  const loginWithGoogle = async (googleIdToken: string) => {
+  const loginWithGoogle = async (googleIdToken: string | null, accessToken: string | null = null) => {
     try {
-      // Send Google ID token to backend
+      // Send Google ID token and/or access token to backend
       const response = await apiClient.post('/api/auth/google-login', {
-        id_token: googleIdToken
+        id_token: googleIdToken,
+        access_token: accessToken
       })
 
       const { access_token, user: userData } = response.data

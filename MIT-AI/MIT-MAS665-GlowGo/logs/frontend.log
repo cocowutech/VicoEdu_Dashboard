@@ -1,0 +1,18 @@
+
+> glowgo-frontend@1.0.0 dev
+> next dev
+
+   ▲ Next.js 14.0.4
+   - Local:        http://localhost:3000
+   - Environments: .env
+
+ ✓ Ready in 1607ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1865ms (661 modules)
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ✓ Compiled in 547ms (298 modules)
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 550ms (660 modules)
+ ✓ Compiled /chat in 378ms (738 modules)
+ ○ Compiling /matches ...
+ ✓ Compiled /matches in 527ms (748 modules)

@@ -16,6 +16,7 @@ from models.user import User
 from utils.db import get_db
 from utils.auth import (
     decode_google_id_token,
+    get_user_info_from_access_token,
     generate_jwt_token,
     get_current_user
 )
@@ -37,10 +38,10 @@ async def google_login(
     db: Session = Depends(get_db)
 ):
     """
-    Authenticate user with Google OAuth ID token
+    Authenticate user with Google OAuth ID token OR Access Token
     
     Flow:
-    1. Verify Google ID token with Google's servers
+    1. Verify Google ID token (if present) or Access Token with Google's servers
     2. Extract user information from token
     3. Check if user exists in database
     4. Create new user if doesn't exist, update if exists
@@ -48,7 +49,7 @@ async def google_login(
     6. Return JWT token and user data
     
     Args:
-        request: GoogleLoginRequest with id_token
+        request: GoogleLoginRequest with id_token and/or access_token
         db: Database session
         
     Returns:
@@ -58,8 +59,20 @@ async def google_login(
         HTTPException: If token is invalid or database error occurs
     """
     try:
-        # Step 1: Decode and verify Google ID token
-        google_user_info = await decode_google_id_token(request.id_token)
+        # Step 1: Verify Token
+        google_user_info = None
+        
+        if request.id_token:
+            # Verify ID Token
+            google_user_info = await decode_google_id_token(request.id_token)
+        elif request.access_token:
+            # Verify Access Token
+            google_user_info = await get_user_info_from_access_token(request.access_token)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either id_token or access_token is required"
+            )
         
         # Extract user information
         email = google_user_info.get("email")
@@ -85,6 +98,8 @@ async def google_login(
             user.first_name = given_name or user.first_name
             user.last_name = family_name or user.last_name
             user.profile_photo_url = picture or user.profile_photo_url
+            if request.access_token:
+                user.google_access_token = request.access_token
             user.updated_at = datetime.utcnow()
             
             db.commit()
@@ -97,7 +112,8 @@ async def google_login(
                 google_id=google_id,
                 first_name=given_name or "User",
                 last_name=family_name or "",
-                profile_photo_url=picture
+                profile_photo_url=picture,
+                google_access_token=request.access_token
             )
             
             db.add(user)
@@ -149,23 +165,10 @@ async def google_login(
         404: {"model": ErrorResponse, "description": "User not found"}
     }
 )
-async def get_current_user_info(
+async def get_current_user_profile(
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get current authenticated user information
-    
-    Requires: Authorization header with Bearer token
-    
-    Args:
-        current_user: Current user from JWT token (injected by dependency)
-        
-    Returns:
-        UserResponse with current user data
-        
-    Raises:
-        HTTPException: If token is invalid or user not found
-    """
+    """Get current authenticated user profile"""
     return UserResponse(
         id=str(current_user.id),
         email=current_user.email,
@@ -176,28 +179,3 @@ async def get_current_user_info(
         created_at=current_user.created_at,
         updated_at=current_user.updated_at
     )
-
-
-@router.post(
-    "/logout",
-    response_model=dict,
-    responses={
-        200: {"description": "Successfully logged out"}
-    }
-)
-async def logout():
-    """
-    Logout endpoint
-    
-    Note: Since we're using stateless JWT tokens, logout is handled
-    client-side by removing the token from storage. This endpoint
-    exists for consistency and future enhancements (e.g., token blacklist).
-    
-    Returns:
-        dict: Success message
-    """
-    return {
-        "success": True,
-        "message": "Successfully logged out. Please remove the token from client storage."
-    }
-

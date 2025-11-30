@@ -16,7 +16,7 @@ export interface AuthContextType {
   user: User | null
   token: string | null
   login: (token: string) => Promise<void>
-  loginWithGoogle: (googleIdToken: string) => Promise<User>
+  loginWithGoogle: (googleIdToken: string | null, accessToken?: string | null) => Promise<User>
   logout: () => void
   isAuthenticated: boolean
   loading: boolean

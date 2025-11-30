@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Button from '@/components/Button'
 import { useAuth } from '@/context/AuthContext'
+import CalendarWidget from '@/components/Chat/CalendarWidget'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -99,7 +100,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             <button
               type="button"
               onClick={handleFindServices}
@@ -133,6 +134,11 @@ export default function DashboardPage() {
                 Your saved providers and services
               </p>
             </div>
+          </div>
+
+          {/* Calendar Widget */}
+          <div className="max-w-4xl mx-auto">
+             <CalendarWidget />
           </div>
 
           {/* Coming Soon Banner */}

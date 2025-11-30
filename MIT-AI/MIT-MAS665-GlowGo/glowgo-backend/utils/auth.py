@@ -5,6 +5,7 @@ Authentication utilities for Google OAuth and JWT token management
 from datetime import datetime, timedelta
 from typing import Optional
 import jwt
+import requests
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from fastapi import HTTPException, status, Depends
@@ -19,6 +20,36 @@ from utils.db import get_db
 # Security scheme for JWT Bearer tokens
 security = HTTPBearer()
 
+async def get_user_info_from_access_token(access_token: str) -> dict:
+    """
+    Get user info from Google using access token
+    """
+    try:
+        response = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access token"
+            )
+            
+        user_info = response.json()
+        
+        return {
+            "email": user_info.get("email"),
+            "given_name": user_info.get("given_name", ""),
+            "family_name": user_info.get("family_name", ""),
+            "picture": user_info.get("picture"),
+            "google_id": user_info.get("sub"),
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Failed to get user info: {str(e)}"
+        )
 
 async def decode_google_id_token(token: str) -> dict:
     """

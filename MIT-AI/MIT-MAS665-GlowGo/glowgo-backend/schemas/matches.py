@@ -75,6 +75,7 @@ class MerchantOption(BaseModel):
     booking_url: Optional[str] = Field(None, description="Direct booking URL")
     bio: Optional[str] = Field(None, description="Business description")
     yelp_url: Optional[str] = Field(None, description="Yelp business page URL")
+    data_source: Optional[str] = Field(None, description="Data source: 'yelp', 'google_places', 'brightdata', or 'manual'")
 
     class Config:
         json_schema_extra = {

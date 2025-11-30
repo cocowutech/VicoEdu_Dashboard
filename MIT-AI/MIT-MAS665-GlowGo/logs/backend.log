@@ -1,0 +1,775 @@
+INFO:     Will watch for changes in these directories: ['/home/vitaly/MIT-MAS665-GlowGo/MIT-AI/MIT-MAS665-GlowGo/glowgo-backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [4478] using WatchFiles
+INFO:     Started server process [4597]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+🚀 GlowGo Backend Starting...
+📊 Database: aws-0-us-west-2.pooler.supabase.com:6543/postgres
+INFO:     127.0.0.1:40020 - "OPTIONS /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40020 - "POST /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40020 - "OPTIONS /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40026 - "OPTIONS /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40020 - "OPTIONS /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40026 - "OPTIONS /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40020 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40026 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40020 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40026 - "GET /api/calendar/events HTTP/1.1" 200 OK
+Retrying langchain_google_genai.chat_models._achat_with_retry.<locals>._achat_with_retry in 2.0 seconds as it raised PermissionDenied: 403 Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "serviceTitle"
+  value: "Generative Language API"
+}
+metadata {
+  key: "containerInfo"
+  value: "876786956685"
+}
+metadata {
+  key: "consumer"
+  value: "projects/876786956685"
+}
+metadata {
+  key: "activationUrl"
+  value: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+, locale: "en-US"
+message: "Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+, links {
+  description: "Google developers console API activation"
+  url: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+].
+BrightData scraping error: Client error '401 Unauthorized' for url 'https://api.brightdata.com/request'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+Retrying langchain_google_genai.chat_models._chat_with_retry.<locals>._chat_with_retry in 2.0 seconds as it raised PermissionDenied: 403 Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "serviceTitle"
+  value: "Generative Language API"
+}
+metadata {
+  key: "containerInfo"
+  value: "876786956685"
+}
+metadata {
+  key: "consumer"
+  value: "projects/876786956685"
+}
+metadata {
+  key: "activationUrl"
+  value: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+, locale: "en-US"
+message: "Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+, links {
+  description: "Google developers console API activation"
+  url: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+].
+Gemini response generation error: 403 Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "serviceTitle"
+  value: "Generative Language API"
+}
+metadata {
+  key: "containerInfo"
+  value: "876786956685"
+}
+metadata {
+  key: "consumer"
+  value: "projects/876786956685"
+}
+metadata {
+  key: "activationUrl"
+  value: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+, locale: "en-US"
+message: "Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+, links {
+  description: "Google developers console API activation"
+  url: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+]
+
+[ConversationAgent] Step 1: Parsing intent from message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[ConversationAgent] Current preferences before intent parsing: {'service_type': None, 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
+[ConversationAgent] Intent result: {'service_type': 'haircut', 'confidence': 0.95}
+[ConversationAgent] Updated service_type to: haircut
+[ConversationAgent] Current preferences after intent parsing: {'service_type': 'haircut', 'budget_min': None, 'budget_max': None, 'time_urgency': None, 'preferred_date': None, 'preferred_time': None, 'time_constraint': None, 'artisan_preference': None, 'special_notes': None}
+
+[ConversationAgent] Step 2: Extracting preferences
+
+[PreferenceExtractor] Processing message: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[DateTimeExtractor] Processing text: 'I want haircut next week on Monday. Up to 60$. In Boston area.'
+[DateTimeExtractor] After time word conversion: 'i want haircut next week on monday. up to 60$. in boston area.'
+[DateTimeExtractor] Found monday → date: 2025-12-01 (days_ahead: 2, is_next_week: True)
+[DateTimeExtractor] Final result: {'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None}
+[PreferenceExtractor] Extracted: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'preferred_date': '2025-12-01', 'location': 'Boston'}
+[ConversationAgent] Preference result: {'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
+[ConversationAgent] Merged extracted_preferences: {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}
+
+[ConversationAgent] Step 3: Checking readiness
+
+[ReadinessDetector] Checking preferences:
+  service_type: haircut
+  budget: 60.0
+  time_urgency: week
+  preferred_date: 2025-12-01
+  preferred_time: None
+  time_constraint: None
+  location: Boston
+  has_time_info: True
+[ReadinessDetector] Result: ready_to_match=True, missing_fields=[]
+
+[ConversationAgent] Readiness result: {'ready_to_match': True, 'missing_fields': [], 'completeness': 0.8}
+[ConversationAgent] Ready to match: True, Missing: []
+
+[ConversationAgent] Ready to match! Triggering live search...
+[ConversationAgent] Location refinement failed: 403 Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "serviceTitle"
+  value: "Generative Language API"
+}
+metadata {
+  key: "containerInfo"
+  value: "876786956685"
+}
+metadata {
+  key: "consumer"
+  value: "projects/876786956685"
+}
+metadata {
+  key: "activationUrl"
+  value: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+, locale: "en-US"
+message: "Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+, links {
+  description: "Google developers console API activation"
+  url: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+]
+[ConversationAgent] Found 6 providers
+[ConversationAgent] Saved/Updated 6 providers to database
+
+[ConversationAgent] Final result: {'extracted_preferences': {'service_type': 'haircut', 'budget_min': 0.0, 'budget_max': 60.0, 'time_urgency': 'week', 'artisan_preference': None, 'special_notes': None, 'preferred_date': '2025-12-01', 'preferred_time': None, 'time_constraint': None, 'location': 'Boston'}, 'response_to_user': 'I found 6 options for you:\n\n1. 3L Barber Co (5.0★) - 518 Tremont St, Boston, MA 02116 [Source: Yelp]\n2. Street Salon & Barbershop (4.9★) - 164 Newbury St, Boston, MA 02116 [Source: Yelp]\n3. S.A.S. Salon (4.8★) - 438 Commercial St, Boston, MA 02109 [Source: Yelp]\n4. Scott Hair (4.7★) - Boston, MA 02111 [Source: Yelp]\n5. Salon 428 Hair By Kent (4.7★) - 428 Massachusetts Ave, Boston, MA 02118 [Source: Yelp]\n\n\nWould you like to book one of these?', 'ready_to_match': True, 'next_question': None, 'conversation_context': 'Service: haircut | Budget: $60.0 | When: week | Location: Boston'}
+
+🔍 Step 1: Filtering by service type: haircut in Boston
+✅ Found 15 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 8 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 8 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 7 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 8 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 8 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: 3L Barber Co
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 32 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 16
+   Step 4: Validating against double-bookings...
+   ✅ 16 conflict-free slots
+
+🔍 Checking availability for: Street Salon & Barbershop
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+🔍 Checking availability for: Salon Mario Russo
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+🔍 Checking availability for: Court Square Styling Shop
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 32 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 16
+   Step 4: Validating against double-bookings...
+   ✅ 16 conflict-free slots
+
+🔍 Checking availability for: Salon Mario Russo
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 36 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 18
+   Step 4: Validating against double-bookings...
+   ✅ 18 conflict-free slots
+
+🔍 Checking availability for: S.A.S. Salon
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 0 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 0
+   Step 4: Validating against double-bookings...
+   ✅ 0 conflict-free slots
+
+🔍 Checking availability for: Scott Hair
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 32 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 16
+   Step 4: Validating against double-bookings...
+   ✅ 16 conflict-free slots
+
+🔍 Checking availability for: Salon 428 Hair By Kent
+   Step 1: Querying calendar...
+   Found 36 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 16 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 0
+   Step 4: Validating against double-bookings...
+   ✅ 0 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 6
+   Total available slots: 102
+INFO:     127.0.0.1:40026 - "POST /api/preferences/chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45716 - "OPTIONS /api/matches/find HTTP/1.1" 200 OK
+🔍 Step 1: Filtering by service type: haircut in Cambridge
+✅ Found 20 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 17 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 17 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 12 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 17 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 10 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Romsey Barbers
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 102 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 102
+   Step 4: Validating against double-bookings...
+   ✅ 102 conflict-free slots
+
+🔍 Checking availability for: Butterfly Hair Salon
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 112 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 112
+   Step 4: Validating against double-bookings...
+   ✅ 112 conflict-free slots
+
+🔍 Checking availability for: Alan Russo Hair Design
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 80 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 80
+   Step 4: Validating against double-bookings...
+   ✅ 80 conflict-free slots
+
+🔍 Checking availability for: Directors Hair
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 124 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 124
+   Step 4: Validating against double-bookings...
+   ✅ 124 conflict-free slots
+
+🔍 Checking availability for: Reverie Hair Studio
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 124 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 124
+   Step 4: Validating against double-bookings...
+   ✅ 124 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barber Shop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 134 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 134
+   Step 4: Validating against double-bookings...
+   ✅ 134 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 10
+   Total available slots: 1132
+INFO:     127.0.0.1:45716 - "POST /api/matches/find HTTP/1.1" 200 OK
+🔍 Step 1: Filtering by service type: haircut in Cambridge
+✅ Found 20 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 17 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 17 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 12 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 17 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 10 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Romsey Barbers
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 102 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 102
+   Step 4: Validating against double-bookings...
+   ✅ 102 conflict-free slots
+
+🔍 Checking availability for: Butterfly Hair Salon
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 112 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 112
+   Step 4: Validating against double-bookings...
+   ✅ 112 conflict-free slots
+
+🔍 Checking availability for: Alan Russo Hair Design
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 80 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 80
+   Step 4: Validating against double-bookings...
+   ✅ 80 conflict-free slots
+
+🔍 Checking availability for: Directors Hair
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 124 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 124
+   Step 4: Validating against double-bookings...
+   ✅ 124 conflict-free slots
+
+🔍 Checking availability for: Reverie Hair Studio
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 124 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 124
+   Step 4: Validating against double-bookings...
+   ✅ 124 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barber Shop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 134 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 134
+   Step 4: Validating against double-bookings...
+   ✅ 134 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 10
+   Total available slots: 1132
+INFO:     127.0.0.1:45724 - "POST /api/matches/find HTTP/1.1" 200 OK
+🔍 Step 1: Filtering by service type: haircut in Cambridge
+✅ Found 20 matching services
+⏭️  Step 2: Skipping location filter (no user location)
+💰 Step 3: Filtering by budget ($0 - $60.0)
+✅ 17 services within budget
+📅 Step 4: Filtering by availability (urgency: week)
+✅ 17 providers available
+🔐 Step 5: Checking provider status and quality
+✅ 12 high-quality providers validated
+🎯 Step 6: Aggregating final candidates
+🎉 Found 17 final candidates (avg quality: 0.83)
+📅 Availability Agent: Checking 10 candidates
+   Service duration: 30 minutes
+   Time urgency: week
+
+🔍 Checking availability for: Romsey Barbers
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 102 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 102
+   Step 4: Validating against double-bookings...
+   ✅ 102 conflict-free slots
+
+🔍 Checking availability for: Butterfly Hair Salon
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 112 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 112
+   Step 4: Validating against double-bookings...
+   ✅ 112 conflict-free slots
+
+🔍 Checking availability for: Alan Russo Hair Design
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 80 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 80
+   Step 4: Validating against double-bookings...
+   ✅ 80 conflict-free slots
+
+🔍 Checking availability for: Directors Hair
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 124 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 124
+   Step 4: Validating against double-bookings...
+   ✅ 124 conflict-free slots
+
+🔍 Checking availability for: Reverie Hair Studio
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 124 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 124
+   Step 4: Validating against double-bookings...
+   ✅ 124 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barbershop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 114 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 114
+   Step 4: Validating against double-bookings...
+   ✅ 114 conflict-free slots
+
+🔍 Checking availability for: Cambridge Barber Shop
+   Step 1: Querying calendar...
+   Found 144 potential slots
+   Booked times: 0
+   Step 2: Checking working hours...
+   Timezone: America/New_York
+   After working hours filter: 134 slots
+   Step 3: Finding slots with 30 min duration...
+   Slots with sufficient duration: 134
+   Step 4: Validating against double-bookings...
+   ✅ 134 conflict-free slots
+
+📊 Availability Summary:
+   Providers with availability: 10
+   Total available slots: 1132
+INFO:     127.0.0.1:34908 - "POST /api/matches/find HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36166 - "POST /api/auth/google-login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36166 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52058 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36166 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52058 - "GET /api/calendar/events HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45952 - "OPTIONS /api/preferences/chat HTTP/1.1" 200 OK
+Retrying langchain_google_genai.chat_models._achat_with_retry.<locals>._achat_with_retry in 2.0 seconds as it raised PermissionDenied: 403 Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "serviceTitle"
+  value: "Generative Language API"
+}
+metadata {
+  key: "containerInfo"
+  value: "876786956685"
+}
+metadata {
+  key: "consumer"
+  value: "projects/876786956685"
+}
+metadata {
+  key: "activationUrl"
+  value: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+, locale: "en-US"
+message: "Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+, links {
+  description: "Google developers console API activation"
+  url: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+].
+BrightData scraping error: Client error '401 Unauthorized' for url 'https://api.brightdata.com/request'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+Retrying langchain_google_genai.chat_models._chat_with_retry.<locals>._chat_with_retry in 2.0 seconds as it raised PermissionDenied: 403 Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "serviceTitle"
+  value: "Generative Language API"
+}
+metadata {
+  key: "containerInfo"
+  value: "876786956685"
+}
+metadata {
+  key: "consumer"
+  value: "projects/876786956685"
+}
+metadata {
+  key: "activationUrl"
+  value: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+, locale: "en-US"
+message: "Generative Language API has not been used in project 876786956685 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+, links {
+  description: "Google developers console API activation"
+  url: "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=876786956685"
+}
+].

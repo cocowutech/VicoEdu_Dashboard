@@ -5,6 +5,7 @@ Orchestrates agents to collect real beauty service provider data for Boston/Camb
 
 import logging
 import json
+import asyncio
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
@@ -19,6 +20,7 @@ from services.tools.data_collection_tools import (
     merchant_storage_tool,
     data_collection_tools
 )
+from services.tools.google_places_tools import google_places_search_tool
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class DataCollectionCrew:
     Crew for collecting real beauty service provider data from multiple sources.
 
     Agents:
-    1. Scout Agent - Finds providers via Yelp API
+    1. Scout Agent - Finds providers via Yelp API and Google Places
     2. Scraper Agent - Gets detailed data via BrightData
     3. Normalizer Agent - Standardizes and validates data
     4. Storage Agent - Saves to database
@@ -42,15 +44,15 @@ class DataCollectionCrew:
     def _create_agents(self):
         """Create specialized agents for data collection"""
 
-        # Scout Agent - Uses Yelp API to find providers
+        # Scout Agent - Uses Yelp API and Google Places to find providers
         self.scout_agent = Agent(
             role="Beauty Service Scout",
-            goal="Find and list beauty service providers in the target area using Yelp API",
+            goal="Find and list beauty service providers in the target area using Yelp API and Google Places",
             backstory="""You are an expert at discovering beauty service providers.
-            You use the Yelp API to search for hair salons, barbershops, nail salons,
+            You use the Yelp API and Google Places to search for hair salons, barbershops, nail salons,
             spas, and other beauty services. You know the best search terms and
             categories to find high-quality providers.""",
-            tools=[yelp_search_tool, yelp_details_tool],
+            tools=[yelp_search_tool, yelp_details_tool, google_places_search_tool],
             verbose=crew_config.AGENT_VERBOSE,
             allow_delegation=False,
             max_iter=crew_config.MAX_ITERATIONS
@@ -138,69 +140,127 @@ class DataCollectionCrew:
 
         try:
             # ======================================================================
-            # STEP 1: Scout - Search Yelp for each category
+            # STEP 1: Scout - Search Yelp AND Google for each category
             # ======================================================================
-            all_yelp_results = []
+            all_raw_results = []
 
-            for category in service_categories:
-                logger.info(f"Searching Yelp for: {category} in {location}")
-
+            async def fetch_category_yelp(category):
                 search_params = json.dumps({
                     "term": category,
                     "location": location,
                     "limit": limit_per_category
                 })
-
                 try:
-                    yelp_result = yelp_search_tool._run(search_params)
-                    yelp_data = json.loads(yelp_result)
-
-                    if "businesses" in yelp_data:
-                        businesses = yelp_data["businesses"]
-                        all_yelp_results.extend(businesses)
-                        logger.info(f"Found {len(businesses)} businesses for {category}")
+                    # Run synchronous tool in thread
+                    res = await asyncio.to_thread(yelp_search_tool._run, search_params)
+                    data = json.loads(res)
+                    if "businesses" in data:
+                        businesses = data["businesses"]
+                        logger.info(f"Yelp: Found {len(businesses)} for {category}")
+                        return businesses
                     else:
-                        logger.warning(f"No businesses found for {category}")
-                        if "error" in yelp_data:
-                            results["errors"].append(f"{category}: {yelp_data['error']}")
-
+                        if "error" in data:
+                            results["errors"].append(f"Yelp {category}: {data['error']}")
+                        return []
                 except Exception as e:
-                    logger.error(f"Error searching {category}: {e}")
-                    results["errors"].append(f"{category}: {str(e)}")
+                    logger.error(f"Yelp error {category}: {e}")
+                    results["errors"].append(f"Yelp {category}: {str(e)}")
+                    return []
+
+            async def fetch_category_google(category):
+                search_params = json.dumps({
+                    "textQuery": f"{category} in {location}",
+                    "limit": limit_per_category
+                })
+                try:
+                    # Run synchronous tool in thread
+                    res = await asyncio.to_thread(google_places_search_tool._run, search_params)
+                    data = json.loads(res)
+                    if "places" in data:
+                        places = data["places"]
+                        logger.info(f"Google: Found {len(places)} for {category}")
+                        return places
+                    else:
+                        if "error" in data:
+                            results["errors"].append(f"Google {category}: {data['error']}")
+                        return []
+                except Exception as e:
+                    logger.error(f"Google error {category}: {e}")
+                    results["errors"].append(f"Google {category}: {str(e)}")
+                    return []
+            
+            # Create tasks for all categories and both sources
+            tasks = []
+            for category in service_categories:
+                tasks.append(fetch_category_yelp(category))
+                tasks.append(fetch_category_google(category))
+            
+            # Execute all searches concurrently
+            logger.info(f"Launching {len(tasks)} search tasks concurrently...")
+            search_results_list = await asyncio.gather(*tasks)
+            
+            # Flatten results
+            for res in search_results_list:
+                all_raw_results.extend(res)
 
             # ======================================================================
-            # STEP 2: Deduplicate by yelp_id
+            # STEP 2: Deduplicate
             # ======================================================================
-            seen_ids = set()
+            seen_ids = set() # Track yelp_id and google_id
+            seen_names = set() # Track simplified name+address for cross-source dedupe
             unique_providers = []
 
-            for provider in all_yelp_results:
+            for provider in all_raw_results:
+                # Check ID uniqueness
+                is_duplicate = False
+                
+                # ID based check
                 yelp_id = provider.get("yelp_id")
-                if yelp_id and yelp_id not in seen_ids:
-                    seen_ids.add(yelp_id)
+                google_id = provider.get("google_id")
+                
+                if yelp_id and f"yelp:{yelp_id}" in seen_ids:
+                    is_duplicate = True
+                if google_id and f"google:{google_id}" in seen_ids:
+                    is_duplicate = True
+                    
+                # Name+Address fuzzy check (simple normalization)
+                if not is_duplicate:
+                    name = provider.get("business_name", "").lower()
+                    addr = provider.get("address", "").split(",")[0].lower() # Just first part of address
+                    name_key = f"{name}|{addr}"
+                    
+                    if name_key in seen_names:
+                        # If we have a duplicate from different source, we might want to merge.
+                        # For now, we skip to keep it simple or prefer the first one found (usually Yelp as it was first in list logic if we processed sequentially, but here it's mixed).
+                        # Let's prefer Yelp data if we have to choose, but actually we just want to avoid duplicate entries in output.
+                        # We'll check if the existing one needs enrichment? 
+                        # For simplicity: skip if duplicate name+addr found.
+                        is_duplicate = True
+                    else:
+                        seen_names.add(name_key)
+
+                if not is_duplicate:
+                    if yelp_id: seen_ids.add(f"yelp:{yelp_id}")
+                    if google_id: seen_ids.add(f"google:{google_id}")
                     unique_providers.append(provider)
 
             logger.info(f"After deduplication: {len(unique_providers)} unique providers")
 
             # ======================================================================
-            # STEP 2.5: Enrich with Yelp business details (working hours, etc.)
+            # STEP 2.5: Enrich with Yelp business details (only for Yelp providers)
             # ======================================================================
-            # For each unique Yelp provider, fetch detailed info including business_hours
-            # so we can later respect real opening hours when matching user time preferences.
+            # Google providers already have hours from the search tool
             for provider in unique_providers:
                 yelp_id = provider.get("yelp_id")
-                if not yelp_id:
-                    continue
+                if yelp_id and not provider.get("business_hours"):
+                    try:
+                        details_raw = await asyncio.to_thread(yelp_details_tool._run, yelp_id)
+                        details = json.loads(details_raw)
 
-                try:
-                    details_raw = yelp_details_tool._run(yelp_id)
-                    details = json.loads(details_raw)
-
-                    # Attach business hours if available (list of {day, start, end, is_overnight})
-                    if isinstance(details, dict) and details.get("business_hours"):
-                        provider["business_hours"] = details["business_hours"]
-                except Exception as e:
-                    logger.warning(f"Error fetching Yelp details for {yelp_id}: {e}")
+                        if isinstance(details, dict) and details.get("business_hours"):
+                            provider["business_hours"] = details["business_hours"]
+                    except Exception as e:
+                        logger.warning(f"Error fetching Yelp details for {yelp_id}: {e}")
 
             # ======================================================================
             # STEP 3: Enhance with BrightData scraping
@@ -213,43 +273,35 @@ class DataCollectionCrew:
             })
 
             try:
-                scrape_result = brightdata_scraper_tool._run(scrape_params)
+                scrape_result = await asyncio.to_thread(brightdata_scraper_tool._run, scrape_params)
                 scrape_data = json.loads(scrape_result)
                 scraped_providers = scrape_data.get("providers", [])
 
                 logger.info(f"Got {len(scraped_providers)} providers from BrightData")
 
-                # Merge scraped data with Yelp data
-                # This is simplified - production would use fuzzy matching
+                # Merge scraped data
                 for provider in unique_providers:
-                    # Try to find matching scraped data by name
                     provider_name = provider.get("business_name", "").lower()
-
                     for scraped in scraped_providers:
                         scraped_name = scraped.get("provider_name", "").lower()
-
-                        # Simple name matching
                         if provider_name in scraped_name or scraped_name in provider_name:
-                            # Merge additional data
                             provider["services"] = scraped.get("services", [])
                             provider["stylist_names"] = scraped.get("stylist_names", [])
                             provider["specialties"] = scraped.get("specialties", [])
                             provider["booking_url"] = scraped.get("booking_url", "")
                             break
-
-                # Also add scraped providers not in Yelp results
+                
+                # Add scraped providers not in results (simplified, similar logic to before)
                 for scraped in scraped_providers:
                     scraped_name = scraped.get("provider_name", "").lower()
-
-                    # Check if not already in unique_providers
                     found = False
                     for provider in unique_providers:
                         if scraped_name in provider.get("business_name", "").lower():
                             found = True
                             break
-
+                    
                     if not found:
-                        # Convert scraped format to standard format
+                         # Convert scraped format to standard format
                         converted = {
                             "business_name": scraped.get("provider_name"),
                             "address": scraped.get("address", ""),
@@ -302,8 +354,11 @@ class DataCollectionCrew:
     def _normalize_provider(self, provider: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Normalize provider data to standard format"""
         try:
-            # Map Yelp categories to our service_category
+            # Map categories (handle Yelp list or Google types list or single string)
             categories = provider.get("categories", [])
+            if not categories:
+                categories = provider.get("types", []) # Google types
+            
             service_category = self._map_to_service_category(categories)
 
             # Parse address components
@@ -317,12 +372,25 @@ class DataCollectionCrew:
                 # Simple parsing - could be improved
                 parts = address.split(",")
                 if len(parts) >= 2:
-                    city = parts[-2].strip()
-                    state_zip = parts[-1].strip().split()
-                    if state_zip:
-                        state = state_zip[0]
-                    if len(state_zip) > 1:
-                        zip_code = state_zip[1]
+                    # Try to find state/zip
+                    last_part = parts[-1].strip()
+                    # Check if last part contains numbers (zip)
+                    if any(char.isdigit() for char in last_part):
+                         # likely "State Zip" or "Zip" or "Country"
+                         # Google format: "Street, City, State Zip, Country"
+                         if len(parts) >= 3:
+                             city = parts[-3].strip() # Assuming country is last or standard format
+                             state_zip = parts[-2].strip().split()
+                             if state_zip:
+                                 state = state_zip[0]
+                             if len(state_zip) > 1:
+                                 zip_code = state_zip[1]
+                    else:
+                        # maybe "City, State"
+                        city = parts[-2].strip()
+                        state_zip = last_part.split()
+                        if state_zip:
+                             state = state_zip[0]
 
             # Generate email from business name
             business_name = provider.get("business_name", "unknown")
@@ -348,6 +416,7 @@ class DataCollectionCrew:
 
                 # Enhanced fields
                 "yelp_id": provider.get("yelp_id"),
+                "google_id": provider.get("google_id"),
                 "website": provider.get("website", ""),
                 "yelp_url": provider.get("yelp_url", ""),
                 "price_range": provider.get("price_range", "$$"),

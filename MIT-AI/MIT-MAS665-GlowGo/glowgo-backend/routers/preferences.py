@@ -169,12 +169,10 @@ async def chat_preferences(
                     search_summary = matching_result.get("search_summary", "")
 
                     # Update AI response to include match results
-                    if ranked_matches:
-                        ai_response = (
-                            f"{ai_response}\n\n{search_summary}\n\n"
-                            f"I found {total_matches_found} great options for you!"
-                        )
-                    else:
+                    # REFACTOR: The ConversationAgent already provides a detailed list of options.
+                    # We ONLY update the response if NO matches were found, to inform the user.
+                    
+                    if not ranked_matches:
                         ai_response = (
                             f"{ai_response}\n\n"
                             f"I searched for matches but couldn't find any providers at the moment. "
