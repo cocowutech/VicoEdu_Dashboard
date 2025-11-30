@@ -122,7 +122,7 @@ export function useChat() {
     if (typeof window === 'undefined') return
     if (hasShownVoiceGreetingRef.current) return
 
-    const userName = user?.name?.split(' ')[0] || 'there'
+    const userName = user?.first_name || 'there'
     const greetingText = `Hi ${userName}! What service are you looking for today?`
 
     const greetingMessage: ChatMessage = {
