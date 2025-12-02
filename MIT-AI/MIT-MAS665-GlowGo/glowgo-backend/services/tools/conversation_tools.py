@@ -886,6 +886,9 @@ def detect_time_suggestion_acceptance(
             "day_before_event": str or None (event name if suggesting day before)
         }
     """
+    import re
+    from datetime import datetime, timedelta
+
     result = {
         "accepted": False,
         "suggested_date": None,
@@ -911,16 +914,15 @@ def detect_time_suggestion_acceptance(
         return result
 
     result["accepted"] = True
+    now = datetime.now()
 
-    # Try to extract the suggested time from the assistant's last message
-    # Look for time patterns like "11:00 AM", "2:30 PM", etc.
-    import re
+    print(f"[TimeAcceptance] User accepted! Extracting from: {assistant_lower[:200]}...")
 
-    # Extract time from assistant message
-    time_match = re.search(r'(\d{1,2}):?(\d{2})?\s*(am|pm)', assistant_lower)
+    # Extract time from assistant message - look for patterns like "11:00 AM", "2:30 PM"
+    time_match = re.search(r'(\d{1,2}):(\d{2})\s*(am|pm)', assistant_lower)
     if time_match:
         hour = int(time_match.group(1))
-        minute = int(time_match.group(2)) if time_match.group(2) else 0
+        minute = int(time_match.group(2))
         ampm = time_match.group(3)
 
         if ampm == 'pm' and hour != 12:
@@ -929,37 +931,68 @@ def detect_time_suggestion_acceptance(
             hour = 0
 
         result["suggested_time"] = f"{hour:02d}:{minute:02d}"
+        print(f"[TimeAcceptance] Extracted time: {result['suggested_time']}")
 
-    # Extract date from assistant message
-    # Look for day names or "tomorrow", "day before"
-    from datetime import datetime, timedelta
-    now = datetime.now()
-
-    days_of_week = {
-        "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
-        "friday": 4, "saturday": 5, "sunday": 6
+    # Extract date - FIRST try explicit date patterns (more reliable)
+    # Pattern: "December 02", "Dec 2", "January 15", etc.
+    months = {
+        "january": 1, "jan": 1, "february": 2, "feb": 2, "march": 3, "mar": 3,
+        "april": 4, "apr": 4, "may": 5, "june": 6, "jun": 6, "july": 7, "jul": 7,
+        "august": 8, "aug": 8, "september": 9, "sep": 9, "october": 10, "oct": 10,
+        "november": 11, "nov": 11, "december": 12, "dec": 12
     }
 
-    for day_name, day_num in days_of_week.items():
-        if day_name in assistant_lower:
-            # Calculate the date for this day
-            current_weekday = now.weekday()
-            days_ahead = day_num - current_weekday
-            if days_ahead <= 0:
-                days_ahead += 7
-            target_date = now + timedelta(days=days_ahead)
-            result["suggested_date"] = target_date.strftime("%Y-%m-%d")
-            break
+    # Try to find explicit month + day patterns
+    date_found = False
+    for month_name, month_num in months.items():
+        # Match patterns like "December 02", "Dec 2", "december 15"
+        pattern = rf'{month_name}\s+(\d{{1,2}})'
+        match = re.search(pattern, assistant_lower)
+        if match:
+            day = int(match.group(1))
+            year = now.year
+            # If the date is in the past, assume next year
+            try:
+                target_date = datetime(year, month_num, day)
+                if target_date.date() < now.date():
+                    target_date = datetime(year + 1, month_num, day)
+                result["suggested_date"] = target_date.strftime("%Y-%m-%d")
+                date_found = True
+                print(f"[TimeAcceptance] Extracted date from '{month_name} {day}': {result['suggested_date']}")
+                break
+            except ValueError:
+                continue
 
+    # If no explicit date found, try day names
+    if not date_found:
+        days_of_week = {
+            "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+            "friday": 4, "saturday": 5, "sunday": 6
+        }
+
+        for day_name, day_num in days_of_week.items():
+            if day_name in assistant_lower:
+                current_weekday = now.weekday()
+                days_ahead = day_num - current_weekday
+                # Allow same day (days_ahead == 0) or future days
+                if days_ahead < 0:
+                    days_ahead += 7
+                target_date = now + timedelta(days=days_ahead)
+                result["suggested_date"] = target_date.strftime("%Y-%m-%d")
+                print(f"[TimeAcceptance] Extracted date from day name '{day_name}': {result['suggested_date']}")
+                break
+
+    # Special keywords
     if "tomorrow" in assistant_lower:
         result["suggested_date"] = (now + timedelta(days=1)).strftime("%Y-%m-%d")
+        print(f"[TimeAcceptance] Extracted 'tomorrow': {result['suggested_date']}")
 
-    if "today" in assistant_lower:
+    if "today" in assistant_lower and not result["suggested_date"]:
         result["suggested_date"] = now.strftime("%Y-%m-%d")
+        print(f"[TimeAcceptance] Extracted 'today': {result['suggested_date']}")
 
     # Check if this was a "day before" suggestion
     if "day before" in assistant_lower or "before your" in assistant_lower:
-        # Try to extract the event name
         event_patterns = [
             r"before (?:your|the) ([^!.]+?)(?:\!|\.|\?|$)",
             r"before ([^!.]+?) so you",
@@ -968,8 +1001,10 @@ def detect_time_suggestion_acceptance(
             match = re.search(pattern, assistant_lower)
             if match:
                 result["day_before_event"] = match.group(1).strip()
+                print(f"[TimeAcceptance] Day before event: {result['day_before_event']}")
                 break
 
+    print(f"[TimeAcceptance] Final result: {result}")
     return result
 
 

@@ -120,17 +120,38 @@ class ConversationAgent:
                 last_assistant_message=last_assistant_message
             )
 
+            # Track if time was just accepted (for special acknowledgment)
+            time_just_accepted = False
+            accepted_time_display = ""
+
             if time_acceptance.get("accepted"):
                 print(f"\n[ConversationAgent] User accepted time suggestion!")
                 print(f"[ConversationAgent] Accepted time: {time_acceptance}")
+                time_just_accepted = True
 
                 # Update current preferences with the accepted time
                 if time_acceptance.get("suggested_date"):
                     current_preferences["preferred_date"] = time_acceptance["suggested_date"]
                     print(f"[ConversationAgent] Set preferred_date to: {time_acceptance['suggested_date']}")
+                    # Format for display
+                    try:
+                        from datetime import datetime as dt
+                        d = dt.fromisoformat(time_acceptance["suggested_date"])
+                        accepted_time_display = d.strftime("%A, %B %d")
+                    except:
+                        accepted_time_display = time_acceptance["suggested_date"]
+
                 if time_acceptance.get("suggested_time"):
                     current_preferences["preferred_time"] = time_acceptance["suggested_time"]
                     print(f"[ConversationAgent] Set preferred_time to: {time_acceptance['suggested_time']}")
+                    # Add time to display
+                    try:
+                        from datetime import datetime as dt
+                        t = dt.strptime(time_acceptance["suggested_time"], "%H:%M")
+                        accepted_time_display += f" at {t.strftime('%I:%M %p')}"
+                    except:
+                        accepted_time_display += f" at {time_acceptance['suggested_time']}"
+
                 if time_acceptance.get("day_before_event"):
                     # Store this as a special note
                     current_preferences["special_notes"] = f"Day before {time_acceptance['day_before_event']}"
@@ -438,11 +459,22 @@ Use this calendar information to make a personalized time suggestion. If there's
 suggest booking the service the day before so the user looks their best for the event.
 """
 
+                # Special handling when time was just accepted
+                time_acceptance_section = ""
+                if time_just_accepted and accepted_time_display:
+                    time_acceptance_section = f"""
+TIME JUST CONFIRMED:
+The user just confirmed the appointment time: {accepted_time_display}
+You MUST acknowledge this confirmation first with something like "Perfect! I've got you down for {accepted_time_display}!"
+Then ask the next question.
+"""
+
                 prompt = f"""You are GlowGo, a friendly AI assistant helping users find beauty services in Boston, Cambridge (MA), and New York City.
 
 CURRENT DATE/TIME: {current_date} at {current_time}
 {calendar_context}
 {calendar_prompt_section}
+{time_acceptance_section}
 
 User said: "{user_message}"
 
@@ -455,11 +487,11 @@ We extracted:
 We need to ask: {question_result.get('question')}
 
 Generate a FRIENDLY response that:
-1. Acknowledges what they said
-2. If calendar insight is available, use it to suggest a specific time slot between their events OR suggest the day before an important event
-3. Example: "I see from your calendar you have a class at MIT at 10am and your next meeting is at 1pm. How about 11:00 AM - that gives you time for your haircut with 30 minutes buffer on each side!"
+1. If TIME JUST CONFIRMED section exists, FIRST acknowledge the time confirmation enthusiastically, then ask the next question
+2. If calendar insight is available and time is NOT yet set, use it to suggest a specific time slot between their events OR suggest the day before an important event
+3. Example for calendar suggestion: "I see from your calendar you have a class at MIT at 10am and your next meeting is at 1pm. How about 11:00 AM - that gives you time for your haircut with 30 minutes buffer on each side!"
 4. If there's an important event (wedding, interview, date, etc.), suggest: "I noticed you have [event] on [date]! Would you like to book your [service] for [day before] so you look amazing for it?"
-5. If no calendar, just ask the time question naturally
+5. If no calendar insight and time is not set, just ask the time question naturally
 6. Be warm and conversational.
 
 Keep it concise but personalized."""
