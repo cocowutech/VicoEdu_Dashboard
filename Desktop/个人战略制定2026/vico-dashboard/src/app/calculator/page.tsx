@@ -3,6 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 // Types matching database schema
+interface Teacher {
+  id: number
+  name: string
+  hourlyRate: number
+  isSelf: boolean
+}
+
 interface LiveClass {
   id: number
   name: string
@@ -11,8 +18,10 @@ interface LiveClass {
   studentNames: string | null    // 学员姓名列表(JSON数组格式)
   lessonDuration: number         // 每课时长（小时）
   weeklyLessons: number          // 周课次
-  teacherHourlyCost: number      // 教师每小时成本
+  teacherId: number | null       // 教师ID
+  teacherHourlyCost: number      // 教师每小时成本（备用）
   totalLessons: number           // 学期总课次
+  teacher?: Teacher | null       // 关联的教师
 }
 
 interface FixedCost {
@@ -47,10 +56,16 @@ export default function CalculatorPage() {
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>([])
   const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([])
   const [commissionCalculations, setCommissionCalculations] = useState<CommissionCalculation[]>([])
+  const [teachers, setTeachers] = useState<Teacher[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedClasses, setExpandedClasses] = useState<Set<number>>(new Set())
   const [editingStudentNames, setEditingStudentNames] = useState<number | null>(null)
   const [tempStudentNames, setTempStudentNames] = useState<string>('')
+
+  // 教师管理弹窗状态
+  const [showTeacherModal, setShowTeacherModal] = useState(false)
+  const [newTeacherName, setNewTeacherName] = useState('')
+  const [newTeacherRate, setNewTeacherRate] = useState(0)
 
   // 解析学员姓名JSON
   const parseStudentNames = (namesJson: string | null): string[] => {
@@ -106,19 +121,22 @@ export default function CalculatorPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [liveRes, fixedRes, commissionRes] = await Promise.all([
+        const [liveRes, fixedRes, commissionRes, teachersRes] = await Promise.all([
           fetch('/api/live-classes'),
           fetch('/api/fixed-costs'),
           fetch('/api/commission-calculations'),
+          fetch('/api/teachers'),
         ])
 
         const liveData = await liveRes.json()
         const fixedData = await fixedRes.json()
         const commissionData = await commissionRes.json()
+        const teachersData = await teachersRes.json()
 
         setLiveClasses(Array.isArray(liveData) ? liveData : [])
         setFixedCosts(Array.isArray(fixedData) ? fixedData : [])
         setCommissionCalculations(Array.isArray(commissionData) ? commissionData : [])
+        setTeachers(Array.isArray(teachersData) ? teachersData : [])
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -141,8 +159,19 @@ export default function CalculatorPage() {
   // 每小时总收入 = 每小时收费/人 * 人数
   const calcHourlyRevenue = (c: LiveClass) => calcHourlyRatePerStudent(c) * safeNum(c.studentCount)
 
-  // 获取教师时薪
-  const getTeacherHourlyRate = (c: LiveClass) => safeNum(c.teacherHourlyCost)
+  // 获取教师时薪（优先从关联的教师获取，否则使用直接设置的成本）
+  const getTeacherHourlyRate = (c: LiveClass) => {
+    if (c.teacher) {
+      return safeNum(c.teacher.hourlyRate)
+    }
+    if (c.teacherId) {
+      const teacher = teachers.find(t => t.id === c.teacherId)
+      if (teacher) {
+        return safeNum(teacher.hourlyRate)
+      }
+    }
+    return safeNum(c.teacherHourlyCost)
+  }
 
   // 每小时利润 = 每小时总收入 - 教师成本
   const calcHourlyProfit = (c: LiveClass) => calcHourlyRevenue(c) - getTeacherHourlyRate(c)
@@ -277,6 +306,46 @@ export default function CalculatorPage() {
     setLiveClasses(liveClasses.filter(c => c.id !== id))
   }
 
+  // Teacher CRUD
+  const addTeacher = async () => {
+    if (!newTeacherName.trim()) return
+    try {
+      const res = await fetch('/api/teachers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newTeacherName.trim(), hourlyRate: newTeacherRate }),
+      })
+      const newTeacher = await res.json()
+      setTeachers([...teachers, newTeacher])
+      setNewTeacherName('')
+      setNewTeacherRate(0)
+    } catch (error) {
+      console.error('Error adding teacher:', error)
+    }
+  }
+
+  const updateTeacher = async (id: number, field: keyof Teacher, value: string | number) => {
+    setTeachers(prev => prev.map(t =>
+      t.id === id ? { ...t, [field]: value } : t
+    ))
+    await fetch('/api/teachers', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, [field]: value }),
+    })
+  }
+
+  const deleteTeacher = async (id: number) => {
+    // 不能删除正在使用的教师
+    const inUse = liveClasses.some(c => c.teacherId === id)
+    if (inUse) {
+      alert('该教师正在使用中，无法删除')
+      return
+    }
+    await fetch(`/api/teachers?id=${id}`, { method: 'DELETE' })
+    setTeachers(teachers.filter(t => t.id !== id))
+  }
+
   // Fixed Cost CRUD
   const addFixedCost = async () => {
     const res = await fetch('/api/fixed-costs', {
@@ -329,12 +398,20 @@ export default function CalculatorPage() {
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-gray-800 text-lg">直播课班级</h3>
-          <button
-            onClick={addLiveClass}
-            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition flex items-center gap-2"
-          >
-            <span>+</span> 添加班级
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowTeacherModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+            >
+              👨‍🏫 管理教师
+            </button>
+            <button
+              onClick={addLiveClass}
+              className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition flex items-center gap-2"
+            >
+              <span>+</span> 添加班级
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -347,7 +424,8 @@ export default function CalculatorPage() {
                 <th className="px-2 py-3 text-center font-medium">每课时长</th>
                 <th className="px-2 py-3 text-center font-medium bg-gray-100">每小时收费/人</th>
                 <th className="px-2 py-3 text-center font-medium">周课次</th>
-                <th className="px-2 py-3 text-center font-medium">教师成本/时</th>
+                <th className="px-2 py-3 text-center font-medium">教师</th>
+                <th className="px-2 py-3 text-center font-medium bg-gray-100">时薪</th>
                 <th className="px-2 py-3 text-center font-medium">学期总课次</th>
                 <th className="px-2 py-3 text-right font-medium bg-green-50 text-green-700">每小时收入</th>
                 <th className="px-2 py-3 text-right font-medium bg-green-50 text-green-700">每小时利润</th>
@@ -414,14 +492,22 @@ export default function CalculatorPage() {
                     />
                   </td>
                   <td className="px-2 py-2">
-                    <input
-                      type="number"
-                      min="0"
-                      value={c.teacherHourlyCost}
-                      onChange={(e) => updateLiveClass(c.id, 'teacherHourlyCost', e.target.value)}
-                      className="w-16 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
-                      placeholder="0"
-                    />
+                    <select
+                      value={c.teacherId || ''}
+                      onChange={(e) => updateLiveClass(c.id, 'teacherId', e.target.value ? Number(e.target.value) : null)}
+                      className="w-20 px-1 py-1 border rounded text-gray-800 bg-white hover:bg-blue-50"
+                      style={{ color: '#1f2937' }}
+                    >
+                      <option value="" style={{ color: '#1f2937' }}>选择教师</option>
+                      {teachers.map(t => (
+                        <option key={t.id} value={t.id} style={{ color: '#1f2937' }}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-2 text-center bg-gray-50 text-gray-600">
+                    {getTeacherHourlyRate(c)}
                   </td>
                   <td className="px-2 py-2">
                     <input
@@ -448,7 +534,7 @@ export default function CalculatorPage() {
                 {/* 展开的学员姓名行 */}
                 {expandedClasses.has(c.id) && (
                   <tr className="bg-amber-50/50">
-                    <td colSpan={13} className="px-4 py-3">
+                    <td colSpan={14} className="px-4 py-3">
                       <div className="flex items-start gap-4">
                         <div className="text-sm font-medium text-gray-700 whitespace-nowrap pt-1">学员名单:</div>
                         {editingStudentNames === c.id ? (
@@ -507,7 +593,7 @@ export default function CalculatorPage() {
               <tr className="bg-amber-100 font-bold text-gray-800">
                 <td className="px-2 py-3 text-right" colSpan={2}>合计</td>
                 <td className="px-2 py-3 text-center">{totalLiveStudents}人</td>
-                <td colSpan={7}></td>
+                <td colSpan={8}></td>
                 <td className="px-2 py-3 text-right text-blue-700">{totalLiveMonthlyProfit.toFixed(0)}</td>
                 <td className="px-2 py-3 text-right text-amber-700">{totalLiveCourseProfit.toFixed(0)}</td>
                 <td></td>
@@ -744,6 +830,103 @@ export default function CalculatorPage() {
       <p className="text-xs text-gray-700 text-center">
         提示：所有数据实时保存，刷新页面数据不会丢失
       </p>
+
+      {/* ==================== 教师管理弹窗 ==================== */}
+      {showTeacherModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-lg mx-4 overflow-hidden shadow-xl">
+            <div className="flex justify-between items-center p-4 border-b bg-blue-50">
+              <h2 className="font-bold text-gray-900 text-lg">👨‍🏫 教师管理</h2>
+              <button
+                onClick={() => setShowTeacherModal(false)}
+                className="w-8 h-8 rounded-lg hover:bg-gray-200 flex items-center justify-center text-gray-500"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-4">
+              {/* 添加新教师 */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-2">添加新教师</h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTeacherName}
+                    onChange={(e) => setNewTeacherName(e.target.value)}
+                    placeholder="教师姓名"
+                    className="flex-1 px-3 py-2 border rounded-lg text-gray-900"
+                  />
+                  <input
+                    type="number"
+                    value={newTeacherRate}
+                    onChange={(e) => setNewTeacherRate(Number(e.target.value))}
+                    placeholder="时薪"
+                    className="w-24 px-3 py-2 border rounded-lg text-gray-900 text-center"
+                    min={0}
+                  />
+                  <button
+                    onClick={addTeacher}
+                    disabled={!newTeacherName.trim()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    添加
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">提示：自己授课时薪可填0</p>
+              </div>
+
+              {/* 教师列表 */}
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {teachers.length === 0 ? (
+                  <p className="text-center text-gray-400 py-4">暂无教师，请添加</p>
+                ) : (
+                  teachers.map(t => (
+                    <div key={t.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <input
+                        type="text"
+                        value={t.name}
+                        onChange={(e) => updateTeacher(t.id, 'name', e.target.value)}
+                        className="flex-1 px-2 py-1 border rounded text-gray-900"
+                        style={{ color: '#1f2937' }}
+                      />
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm text-gray-500">时薪:</span>
+                        <input
+                          type="number"
+                          value={t.hourlyRate}
+                          onChange={(e) => updateTeacher(t.id, 'hourlyRate', Number(e.target.value))}
+                          className="w-20 px-2 py-1 border rounded text-center text-gray-900"
+                          min={0}
+                        />
+                      </div>
+                      {t.isSelf && (
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded">自己</span>
+                      )}
+                      <button
+                        onClick={() => deleteTeacher(t.id)}
+                        className="text-red-500 hover:text-red-700 px-2"
+                        title="删除"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end p-4 border-t bg-gray-50">
+              <button
+                onClick={() => setShowTeacherModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
