@@ -3,13 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 // Types matching database schema
-interface Teacher {
-  id: number
-  name: string
-  hourlyRate: number
-  isSelf: boolean
-}
-
 interface LiveClass {
   id: number
   name: string
@@ -18,8 +11,7 @@ interface LiveClass {
   studentNames: string | null    // 学员姓名列表(JSON数组格式)
   lessonDuration: number         // 每课时长（小时）
   weeklyLessons: number          // 周课次
-  teacherId: number | null       // 教师ID
-  teacher: Teacher | null        // 教师信息
+  teacherHourlyCost: number      // 教师每小时成本
   totalLessons: number           // 学期总课次
 }
 
@@ -53,16 +45,12 @@ interface CommissionCalculation {
 
 export default function CalculatorPage() {
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>([])
-  const [teachers, setTeachers] = useState<Teacher[]>([])
   const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([])
   const [commissionCalculations, setCommissionCalculations] = useState<CommissionCalculation[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedClasses, setExpandedClasses] = useState<Set<number>>(new Set())
   const [editingStudentNames, setEditingStudentNames] = useState<number | null>(null)
   const [tempStudentNames, setTempStudentNames] = useState<string>('')
-  const [showAddTeacher, setShowAddTeacher] = useState(false)
-  const [newTeacherName, setNewTeacherName] = useState('')
-  const [newTeacherRate, setNewTeacherRate] = useState(0)
 
   // 解析学员姓名JSON
   const parseStudentNames = (namesJson: string | null): string[] => {
@@ -118,20 +106,17 @@ export default function CalculatorPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [liveRes, teacherRes, fixedRes, commissionRes] = await Promise.all([
+        const [liveRes, fixedRes, commissionRes] = await Promise.all([
           fetch('/api/live-classes'),
-          fetch('/api/teachers'),
           fetch('/api/fixed-costs'),
           fetch('/api/commission-calculations'),
         ])
 
         const liveData = await liveRes.json()
-        const teacherData = await teacherRes.json()
         const fixedData = await fixedRes.json()
         const commissionData = await commissionRes.json()
 
         setLiveClasses(Array.isArray(liveData) ? liveData : [])
-        setTeachers(Array.isArray(teacherData) ? teacherData : [])
         setFixedCosts(Array.isArray(fixedData) ? fixedData : [])
         setCommissionCalculations(Array.isArray(commissionData) ? commissionData : [])
       } catch (error) {
@@ -157,9 +142,9 @@ export default function CalculatorPage() {
   const calcHourlyRevenue = (c: LiveClass) => calcHourlyRatePerStudent(c) * safeNum(c.studentCount)
 
   // 获取教师时薪
-  const getTeacherHourlyRate = (c: LiveClass) => safeNum(c.teacher?.hourlyRate)
+  const getTeacherHourlyRate = (c: LiveClass) => safeNum(c.teacherHourlyCost)
 
-  // 每小时利润 = 每小时总收入 - 教师时薪 (如果是Coco则教师时薪为0)
+  // 每小时利润 = 每小时总收入 - 教师成本
   const calcHourlyProfit = (c: LiveClass) => calcHourlyRevenue(c) - getTeacherHourlyRate(c)
 
   // 月利润 = 每小时利润 * 每课时长 * 周课次 * 4
@@ -216,9 +201,9 @@ export default function CalculatorPage() {
     let csv = '\uFEFF'
 
     csv += '直播课班级\n'
-    csv += '班级名称,每课收入/人,人数,每课时长,每小时收费/人,周课次,教师,教师时薪,学期总课次,每小时收入,每小时利润,月利润,课程总利润\n'
+    csv += '班级名称,每课收入/人,人数,每课时长,每小时收费/人,周课次,教师成本/时,学期总课次,每小时收入,每小时利润,月利润,课程总利润\n'
     liveClasses.forEach(c => {
-      csv += `${c.name},${c.lessonPricePerStudent},${c.studentCount},${c.lessonDuration},${calcHourlyRatePerStudent(c).toFixed(0)},${c.weeklyLessons},${c.teacher?.name || '-'},${getTeacherHourlyRate(c)},${c.totalLessons},${calcHourlyRevenue(c).toFixed(0)},${calcHourlyProfit(c).toFixed(0)},${calcMonthlyProfit(c).toFixed(0)},${calcCourseProfit(c).toFixed(0)}\n`
+      csv += `${c.name},${c.lessonPricePerStudent},${c.studentCount},${c.lessonDuration},${calcHourlyRatePerStudent(c).toFixed(0)},${c.weeklyLessons},${getTeacherHourlyRate(c)},${c.totalLessons},${calcHourlyRevenue(c).toFixed(0)},${calcHourlyProfit(c).toFixed(0)},${calcMonthlyProfit(c).toFixed(0)},${calcCourseProfit(c).toFixed(0)}\n`
     })
     csv += `合计,,${totalLiveStudents},,,,,,,,${totalLiveMonthlyProfit.toFixed(0)},${totalLiveCourseProfit.toFixed(0)}\n\n`
 
@@ -264,19 +249,7 @@ export default function CalculatorPage() {
   }
 
   const updateLiveClass = useCallback(async (id: number, field: string, value: string | number | null) => {
-    // 如果更新了 teacherId，也需要更新 teacher 对象
-    if (field === 'teacherId') {
-      const teacherId = value ? Number(value) : null
-      const teacher = teachers.find(t => t.id === teacherId) || null
-      setLiveClasses(prev => prev.map(c =>
-        c.id === id ? { ...c, teacherId, teacher } : c
-      ))
-      await fetch('/api/live-classes', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, teacherId }),
-      })
-    } else if (field === 'name') {
+    if (field === 'name') {
       setLiveClasses(prev => prev.map(c =>
         c.id === id ? { ...c, [field]: value as string } : c
       ))
@@ -296,27 +269,12 @@ export default function CalculatorPage() {
         body: JSON.stringify({ id, [field]: numValue }),
       })
     }
-  }, [teachers])
+  }, [])
 
   const deleteLiveClass = async (id: number) => {
     if (liveClasses.length <= 1) return
     await fetch(`/api/live-classes?id=${id}`, { method: 'DELETE' })
     setLiveClasses(liveClasses.filter(c => c.id !== id))
-  }
-
-  // Teacher CRUD
-  const addTeacher = async () => {
-    if (!newTeacherName.trim()) return
-    const res = await fetch('/api/teachers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newTeacherName, hourlyRate: newTeacherRate }),
-    })
-    const newTeacher = await res.json()
-    setTeachers([...teachers, newTeacher])
-    setNewTeacherName('')
-    setNewTeacherRate(0)
-    setShowAddTeacher(false)
   }
 
   // Fixed Cost CRUD
@@ -371,20 +329,12 @@ export default function CalculatorPage() {
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-gray-800 text-lg">直播课班级</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowAddTeacher(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <span>+</span> 添加教师
-            </button>
-            <button
-              onClick={addLiveClass}
-              className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition flex items-center gap-2"
-            >
-              <span>+</span> 添加班级
-            </button>
-          </div>
+          <button
+            onClick={addLiveClass}
+            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition flex items-center gap-2"
+          >
+            <span>+</span> 添加班级
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -397,7 +347,7 @@ export default function CalculatorPage() {
                 <th className="px-2 py-3 text-center font-medium">每课时长</th>
                 <th className="px-2 py-3 text-center font-medium bg-gray-100">每小时收费/人</th>
                 <th className="px-2 py-3 text-center font-medium">周课次</th>
-                <th className="px-2 py-3 text-center font-medium">教师</th>
+                <th className="px-2 py-3 text-center font-medium">教师成本/时</th>
                 <th className="px-2 py-3 text-center font-medium">学期总课次</th>
                 <th className="px-2 py-3 text-right font-medium bg-green-50 text-green-700">每小时收入</th>
                 <th className="px-2 py-3 text-right font-medium bg-green-50 text-green-700">每小时利润</th>
@@ -464,26 +414,14 @@ export default function CalculatorPage() {
                     />
                   </td>
                   <td className="px-2 py-2">
-                    <div className="flex flex-col items-center gap-1">
-                      <select
-                        value={c.teacherId || ''}
-                        onChange={(e) => updateLiveClass(c.id, 'teacherId', e.target.value || null)}
-                        className="w-28 px-2 py-1 border rounded bg-white hover:bg-blue-50 text-sm"
-                        style={{ color: '#1f2937', WebkitTextFillColor: '#1f2937', colorScheme: 'light' }}
-                      >
-                        {teachers.map(t => (
-                          <option key={t.id} value={t.id} style={{ color: '#1f2937', backgroundColor: 'white' }}>
-                            {t.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => setShowAddTeacher(true)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                      >
-                        +添加
-                      </button>
-                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      value={c.teacherHourlyCost}
+                      onChange={(e) => updateLiveClass(c.id, 'teacherHourlyCost', e.target.value)}
+                      className="w-16 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
+                      placeholder="0"
+                    />
                   </td>
                   <td className="px-2 py-2">
                     <input
@@ -597,52 +535,6 @@ export default function CalculatorPage() {
           </div>
         </div>
       </div>
-
-      {/* 添加教师弹窗 */}
-      {showAddTeacher && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-80 shadow-xl">
-            <h3 className="font-bold text-gray-800 mb-4">添加新教师</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">教师姓名</label>
-                <input
-                  type="text"
-                  value={newTeacherName}
-                  onChange={(e) => setNewTeacherName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-gray-800"
-                  placeholder="输入教师姓名"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">每小时工资 <span className="text-gray-400">(Coco可填0)</span></label>
-                <input
-                  type="number"
-                  min="0"
-                  value={newTeacherRate}
-                  onChange={(e) => setNewTeacherRate(Number(e.target.value))}
-                  className="w-full px-3 py-2 border rounded-lg text-gray-800"
-                  placeholder="0"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={addTeacher}
-                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-                >
-                  添加
-                </button>
-                <button
-                  onClick={() => { setShowAddTeacher(false); setNewTeacherName(''); setNewTeacherRate(0); }}
-                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ==================== Recorded Camps Table ==================== */}
       <div className="bg-white rounded-xl p-6 shadow-sm">

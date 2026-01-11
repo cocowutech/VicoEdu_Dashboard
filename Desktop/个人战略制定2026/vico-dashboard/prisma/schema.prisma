@@ -1,0 +1,488 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  strategicPositioning StrategicPositioning?
+  products             Product[]
+  costParameters       CostParameter[]
+  financialScenarios   FinancialScenario[]
+  goals                Goal[]
+  weeklyTracking       WeeklyTracking[]
+  monthlyReviews       MonthlyReview[]
+  aiAutomations        AiAutomation[]
+  funnelMetrics        FunnelMetric[]
+  students             Student[]
+  liveClasses          LiveClass[]
+  recordedCamps        RecordedCamp[]
+  fixedCosts           FixedCost[]
+  presetProducts       PresetProduct[]
+  commissionRules         CommissionRule[]
+  globalSettings          GlobalSetting[]
+  courseMaterialCosts     CourseMaterialCost[]
+  commissionCalculations  CommissionCalculation[]
+  productMatrixItems      ProductMatrixItem[]
+  aiProductIdeas          AiProductIdea[]
+  dailyTodos              DailyTodo[]
+  teachers                Teacher[]
+
+  @@map("users")
+}
+
+model StrategicPositioning {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique @map("user_id")
+  currentPhase     String?  @map("current_phase")
+  oneLiner         String?  @map("one_liner")
+  dimension1       String?  @map("dimension1_strengths")
+  dimension2       String?  @map("dimension2_pain_points")
+  dimension3       String?  @map("dimension3_resources")
+  strategicFocus   String?  @map("strategic_focus")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("strategic_positioning")
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  category       String
+  examType       String   @map("exam_type")
+  productName    String   @map("product_name")
+  productType    String?  @map("product_type")
+  hasLiveService Boolean  @default(false) @map("has_live_service")
+  price          Decimal
+  isOutsourced   Boolean  @default(false) @map("is_outsourced")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user               User                @relation(fields: [userId], references: [id])
+  financialScenarios FinancialScenario[]
+
+  @@map("products")
+}
+
+model CostParameter {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  parameterName     String   @map("parameter_name")
+  parameterCategory String?  @map("parameter_category")
+  parameterValue    Decimal  @map("parameter_value")
+  valueType         String?  @map("value_type")
+  description       String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("cost_parameters")
+}
+
+model FinancialScenario {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @map("user_id")
+  scenarioName         String?  @map("scenario_name")
+  scenarioType         String?  @map("scenario_type")
+  liveClassCount       Int?     @map("live_class_count")
+  liveStudentsPerClass Int?     @map("live_students_per_class")
+  livePricePerHour     Decimal? @map("live_price_per_hour")
+  liveHoursPerWeek     Int?     @map("live_hours_per_week")
+  liveCommissionRate   Decimal? @map("live_commission_rate")
+  campProductId        Int?     @map("camp_product_id")
+  campStudentCount     Int?     @map("camp_student_count")
+  campSalesRate        Decimal? @map("camp_sales_rate")
+  campOpsRate          Decimal? @map("camp_ops_rate")
+  campMaterialCost     Decimal? @map("camp_material_cost")
+  totalRevenue         Decimal? @map("total_revenue")
+  totalCost            Decimal? @map("total_cost")
+  netProfit            Decimal? @map("net_profit")
+  profitMargin         Decimal? @map("profit_margin")
+  isDefault            Boolean  @default(false) @map("is_default")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id])
+  campProduct Product? @relation(fields: [campProductId], references: [id])
+
+  @@map("financial_scenarios")
+}
+
+model Goal {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  goalType     String?   @map("goal_type")
+  goalName     String    @map("goal_name")
+  targetValue  Decimal?  @map("target_value")
+  currentValue Decimal?  @default(0) @map("current_value")
+  unit         String?
+  deadline     DateTime?
+  period       String?
+  status       String?   @default("active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("goals")
+}
+
+model WeeklyTracking {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @map("user_id")
+  weekStart            DateTime @map("week_start")
+  weekEnd              DateTime @map("week_end")
+  xhsPostsTarget       Int?     @map("xhs_posts_target")
+  xhsPostsActual       Int?     @map("xhs_posts_actual")
+  newFollowersTarget   Int?     @map("new_followers_target")
+  newFollowersActual   Int?     @map("new_followers_actual")
+  inquiriesTarget      Int?     @map("inquiries_target")
+  inquiriesActual      Int?     @map("inquiries_actual")
+  trialStudentsTarget  Int?     @map("trial_students_target")
+  trialStudentsActual  Int?     @map("trial_students_actual")
+  newEnrollmentsTarget Int?     @map("new_enrollments_target")
+  newEnrollmentsActual Int?     @map("new_enrollments_actual")
+  revenueTarget        Decimal? @map("revenue_target")
+  revenueActual        Decimal? @map("revenue_actual")
+  wins                 String?
+  challenges           String?
+  nextWeekPriorities   String?  @map("next_week_priorities")
+  onMainline           String?  @map("on_mainline")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("weekly_tracking")
+}
+
+model MonthlyReview {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @map("user_id")
+  month                DateTime
+  keyActionsCompletion String?  @map("key_actions_completion")
+  biggestWin           String?  @map("biggest_win")
+  biggestLesson        String?  @map("biggest_lesson")
+  mainlineAdjustment   String?  @map("mainline_adjustment")
+  adjustmentDetails    String?  @map("adjustment_details")
+  nextMonthFocus       String?  @map("next_month_focus")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("monthly_reviews")
+}
+
+model AiAutomation {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  taskName       String   @map("task_name")
+  description    String?
+  toolSuggestion String?  @map("tool_suggestion")
+  priority       Int?
+  status         String?  @default("pending")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("ai_automations")
+}
+
+model FunnelMetric {
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @map("user_id")
+  recordDate          DateTime @map("record_date")
+  stage1Awareness     Int?     @map("stage1_awareness")
+  stage2Interest      Int?     @map("stage2_interest")
+  stage3Consideration Int?     @map("stage3_consideration")
+  stage4Purchase      Int?     @map("stage4_purchase")
+  stage5Retention     Int?     @map("stage5_retention")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("funnel_metrics")
+}
+
+model Student {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  name             String?
+  parentContact    String?  @map("parent_contact")
+  source           String?
+  currentStage     String?  @map("current_stage")
+  enrolledProducts String?  @map("enrolled_products")
+  totalPaid        Decimal? @default(0) @map("total_paid")
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("students")
+}
+
+// 教师表
+model Teacher {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String   // 教师姓名
+  hourlyRate  Float    @map("hourly_rate") // 每小时付费价格(Coco为0)
+  isSelf      Boolean  @default(false) @map("is_self") // 是否是自己(Coco)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User        @relation(fields: [userId], references: [id])
+  liveClasses LiveClass[]
+
+  @@map("teachers")
+}
+
+// 直播课班级表
+model LiveClass {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @map("user_id")
+  name                  String   // 班级名称
+  lessonPricePerStudent Float    @default(700) @map("lesson_price_per_student") // 每课收入/人
+  studentCount          Int      @map("student_count") // 人数
+  studentNames          String?  @map("student_names") // 学员姓名列表(JSON数组格式)
+  lessonDuration        Float    @map("lesson_duration") // 每课时长(小时)
+  weeklyLessons         Int      @map("weekly_lessons") // 周课次
+  teacherId             Int?     @map("teacher_id") // 教师ID (已弃用)
+  teacherHourlyCost     Float    @default(0) @map("teacher_hourly_cost") // 教师每小时成本
+  totalLessons          Int      @map("total_lessons") // 学期总课次
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  teacher Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@map("live_classes")
+}
+
+// 预设产品表
+model PresetProduct {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  name             String   // 产品名称
+  defaultPrice     Float    @map("default_price") // 默认定价
+  defaultSalesRate Float    @map("default_sales_rate") // 默认销售分佣比例
+  defaultOpsRate   Float    @map("default_ops_rate") // 默认运营分佣比例
+  defaultOtherCost Float    @map("default_other_cost") // 默认人均其他成本
+  examType         String   @map("exam_type") // 考试类型: KET/PET/FCE
+  hasLive          Boolean  @map("has_live") // 是否带直播
+  campType         String   @map("camp_type") // 营期类型: full/sprint/textbook
+  sortOrder        Int      @default(0) @map("sort_order") // 排序
+  isActive         Boolean  @default(true) @map("is_active") // 是否启用
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user         User           @relation(fields: [userId], references: [id])
+  recordedCamps RecordedCamp[]
+
+  @@map("preset_products")
+}
+
+// 录播陪跑营表
+model RecordedCamp {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @map("user_id")
+  productId            Int?     @map("product_id") // 关联预设产品(可为空表示自定义)
+  name                 String   // 营期名称
+  price                Float    // 定价
+  studentCount         Int      @map("student_count") // 学员数
+  salesCommissionRate  Float    @map("sales_commission_rate") // 销售分佣比例 (0-100)
+  opsCommissionRate    Float    @map("ops_commission_rate") // 运营分佣比例 (0-100)
+  otherCostPerStudent  Float    @map("other_cost_per_student") // 人均其他成本
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user    User           @relation(fields: [userId], references: [id])
+  product PresetProduct? @relation(fields: [productId], references: [id])
+
+  @@map("recorded_camps")
+}
+
+// 固定成本表
+model FixedCost {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  name      String   // 成本名称
+  amount    Float    // 金额
+  frequency String   @default("monthly") // 支出频率: monthly(每月) / yearly(每年)
+  notes     String?  // 备注
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("fixed_costs")
+}
+
+// 运营分佣规则表 - 根据产品类型和人数区间设置分佣比例
+model CommissionRule {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  productType String   @map("product_type") // with_live(带直播) / without_live(不带直播)
+  minStudents Int      @map("min_students") // 最小人数
+  maxStudents Int?     @map("max_students") // 最大人数(null表示无上限)
+  cocoRate    Float    @map("coco_rate") // Coco分佣比例 (0-100)
+  zoeyRate    Float    @map("zoey_rate") // Zoey分佣比例 (0-100)
+  echoRate    Float    @map("echo_rate") // Echo分佣比例 (0-100)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productType, minStudents])
+  @@map("commission_rules")
+}
+
+// 全局设置表
+model GlobalSetting {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  settingKey   String   @map("setting_key") // 设置键名
+  settingValue String   @map("setting_value") // 设置值
+  settingType  String   @default("string") @map("setting_type") // 值类型: string/number/boolean
+  description  String?  // 描述
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, settingKey])
+  @@map("global_settings")
+}
+
+// 课程教材成本表
+model CourseMaterialCost {
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @map("user_id")
+  courseName          String   @map("course_name") // 课程名称
+  retailPrice         Float    @map("retail_price") // 零售价
+  materialCost        Float    @map("material_cost") // 教材成本
+  hasLive             Boolean  @default(false) @map("has_live") // 是否带直播
+  qianTeacherFee      Float    @default(0) @map("qian_teacher_fee") // 钱老师费用(带直播时)
+  salesCommissionRate Float    @map("sales_commission_rate") // 销售分佣比例(0-100)
+  platformFee         Float    @default(0) @map("platform_fee") // 平台抽佣费用(每单固定金额)
+  defaultCampDuration Int      @default(0) @map("default_camp_duration") // 默认营期长度(天)
+  sortOrder           Int      @default(0) @map("sort_order") // 排序
+  isActive            Boolean  @default(true) @map("is_active") // 是否启用
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("course_material_costs")
+}
+
+// 运营分配计算记录表
+model CommissionCalculation {
+  id                 Int       @id @default(autoincrement())
+  userId             Int       @map("user_id")
+  courseName         String    @map("course_name")
+  studentCount       Int       @map("student_count")
+  hasLive            Boolean   @map("has_live")
+  retailPrice        Float     @map("retail_price")
+  totalRevenue       Float     @map("total_revenue")
+  materialCost       Float     @map("material_cost")
+  salesCommission    Float     @map("sales_commission")
+  platformCommission Float     @default(0) @map("platform_commission") // 平台抽佣金额
+  qianTeacherFee     Float     @map("qian_teacher_fee")
+  distributionPool   Float     @map("distribution_pool")
+  cocoAmount         Float     @map("coco_amount")
+  zoeyAmount         Float     @map("zoey_amount")
+  echoAmount         Float     @map("echo_amount")
+  cocoRate           Float     @map("coco_rate")
+  zoeyRate           Float     @map("zoey_rate")
+  echoRate           Float     @map("echo_rate")
+  startDate          DateTime? @map("start_date") // 开营日期
+  campDuration       Int       @default(0) @map("camp_duration") // 营期长度(天)
+  holidayDays        Int       @default(0) @map("holiday_days") // 预计假期天数
+  notes              String?   @map("notes") // 备注
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("commission_calculations")
+}
+
+// 产品矩阵项目表 - 存储考试层级、定价等信息
+model ProductMatrixItem {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  category     String   // exam_hierarchy(考试层级), live_pricing(直播课定价), recorded_pricing(录播定价)
+  itemType     String   @map("item_type") // 具体类型
+  itemName     String   @map("item_name") // 名称
+  itemValue    String?  @map("item_value") // 值(价格等)
+  itemValue2   String?  @map("item_value2") // 第二个值(小班价格等)
+  colorClass   String?  @map("color_class") // 颜色样式
+  isOutsourced Boolean  @default(false) @map("is_outsourced") // 是否外包
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("product_matrix_items")
+}
+
+// AI产品升级方向表
+model AiProductIdea {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  title       String   // 标题
+  icon        String   // 图标emoji
+  colorTheme  String   @map("color_theme") // 颜色主题: purple/blue/green/orange
+  description String   // 描述
+  testNote    String   @map("test_note") // 测试备注
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("ai_product_ideas")
+}
+
+// 每日待办事项表
+model DailyTodo {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  date      String   // 日期 YYYY-MM-DD 格式
+  text      String   // 待办内容
+  completed Boolean  @default(false) // 是否完成
+  sortOrder Int      @default(0) @map("sort_order") // 排序
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("daily_todos")
+}
