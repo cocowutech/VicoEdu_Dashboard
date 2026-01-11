@@ -43,14 +43,26 @@ input, textarea, select {
 }
 
 /* Fix select dropdown text visibility */
-select {
+select,
+select:focus,
+select:active,
+select:hover {
   color: #1f2937 !important;
   background-color: white !important;
+  -webkit-text-fill-color: #1f2937 !important;
 }
 
-select option {
+select option,
+select option:checked,
+select option:hover {
   color: #1f2937 !important;
   background-color: white !important;
+  -webkit-text-fill-color: #1f2937 !important;
+}
+
+/* Force dark text on all form elements */
+select, option {
+  color-scheme: light !important;
 }
 
 /* Custom scrollbar - warm tones */
