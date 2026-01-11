@@ -468,11 +468,11 @@ export default function CalculatorPage() {
                       <select
                         value={c.teacherId || ''}
                         onChange={(e) => updateLiveClass(c.id, 'teacherId', e.target.value || null)}
-                        className="w-28 px-2 py-1 border rounded text-gray-800 bg-white hover:bg-blue-50 text-sm"
-                        style={{ color: '#1f2937' }}
+                        className="w-28 px-2 py-1 border rounded bg-white hover:bg-blue-50 text-sm"
+                        style={{ color: '#1f2937', WebkitTextFillColor: '#1f2937', colorScheme: 'light' }}
                       >
                         {teachers.map(t => (
-                          <option key={t.id} value={t.id} className="text-gray-800 bg-white" style={{ color: '#1f2937' }}>
+                          <option key={t.id} value={t.id} style={{ color: '#1f2937', backgroundColor: 'white' }}>
                             {t.name}
                           </option>
                         ))}
