@@ -5,14 +5,24 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSidebar } from '@/contexts/SidebarContext'
 
-const navItems = [
-  { href: '/', label: '战略概览', icon: '📊' },
-  { href: '/products', label: '产品矩阵', icon: '📦' },
-  { href: '/funnel', label: '用户旅程', icon: '🎯' },
-  { href: '/calculator', label: '财务计算器', icon: '💰' },
-  { href: '/commission', label: '运营分配', icon: '👥' },
-  { href: '/daily', label: '每日规划', icon: '📅' },
+// All navigation items with role restrictions
+const allNavItems = [
+  { href: '/', label: '战略概览', icon: '📊', adminOnly: true },
+  { href: '/products', label: '产品矩阵', icon: '📦', adminOnly: true },
+  { href: '/funnel', label: '用户旅程', icon: '🎯', adminOnly: true },
+  { href: '/calculator', label: '财务计算器', icon: '💰', adminOnly: true },
+  { href: '/commission', label: '运营分配', icon: '👥', adminOnly: false },
+  { href: '/daily', label: '每日规划', icon: '📅', adminOnly: true },
 ]
+
+// Helper to get cookie value
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+  return null
+}
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -20,6 +30,8 @@ export default function Sidebar() {
   const [loggingOut, setLoggingOut] = useState(false)
   const { isCollapsed, isMobileOpen, toggleCollapse, closeMobile } = useSidebar()
   const [isMobile, setIsMobile] = useState(false)
+  const [userName, setUserName] = useState<string | null>(null)
+  const [isStaff, setIsStaff] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024)
@@ -27,6 +39,19 @@ export default function Sidebar() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Check user role from cookie
+  useEffect(() => {
+    const user = getCookie('vico_user')
+    setUserName(user ? decodeURIComponent(user) : null)
+    // Staff users: Echo, Zoey
+    setIsStaff(user === 'Echo' || user === 'Zoey')
+  }, [])
+
+  // Filter nav items based on role
+  const navItems = isStaff
+    ? allNavItems.filter(item => !item.adminOnly)
+    : allNavItems
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -86,7 +111,9 @@ export default function Sidebar() {
             {(!isCollapsed || isMobileOpen) && (
               <div className="overflow-hidden transition-all duration-300">
                 <h1 className="text-lg font-bold text-amber-50 tracking-tight whitespace-nowrap">Vico Education</h1>
-                <p className="text-xs text-stone-400 whitespace-nowrap">战略仪表盘</p>
+                <p className="text-xs text-stone-400 whitespace-nowrap">
+                  {userName ? `👤 ${userName}` : '战略仪表盘'}
+                </p>
               </div>
             )}
           </div>
