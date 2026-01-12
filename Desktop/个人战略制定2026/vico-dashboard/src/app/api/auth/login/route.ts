@@ -6,8 +6,8 @@ import { cookies } from 'next/headers'
 // staff: only access to commission page
 const USERS = [
   { username: 'vicoedu', password: 'million$offer', role: 'admin', name: 'Vico Admin' },
-  { username: 'echo', password: 'echo2024', role: 'staff', name: 'Echo' },
-  { username: 'zoey', password: 'zoey2024', role: 'staff', name: 'Zoey' },
+  { username: 'echo', password: 'echo2026', role: 'staff', name: 'Echo' },
+  { username: 'zoey', password: 'zoey2026', role: 'staff', name: 'Zoey' },
 ]
 
 export async function POST(request: Request) {

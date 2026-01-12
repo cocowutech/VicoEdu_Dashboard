@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vico Education 战略仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .input-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #667eea; cursor: pointer; }
+        .tab-active { border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600; }
+        .funnel-step { clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%); }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold">Vico Education 战略仪表盘</h1>
+            <p class="text-purple-100 mt-1">事业战略顶层设计 · 动态财务计算 · 产品矩阵</p>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex space-x-8 overflow-x-auto">
+                <button onclick="showTab('overview')" id="tab-overview" class="py-4 px-2 tab-active whitespace-nowrap">📊 战略概览</button>
+                <button onclick="showTab('products')" id="tab-products" class="py-4 px-2 text-gray-500 hover:text-gray-700 whitespace-nowrap">📦 产品矩阵</button>
+                <button onclick="showTab('calculator')" id="tab-calculator" class="py-4 px-2 text-gray-500 hover:text-gray-700 whitespace-nowrap">💰 财务计算器</button>
+                <button onclick="showTab('funnel')" id="tab-funnel" class="py-4 px-2 text-gray-500 hover:text-gray-700 whitespace-nowrap">🎯 用户旅程</button>
+                <button onclick="showTab('ai')" id="tab-ai" class="py-4 px-2 text-gray-500 hover:text-gray-700 whitespace-nowrap">🤖 AI自动化</button>
+                <button onclick="showTab('tracker')" id="tab-tracker" class="py-4 px-2 text-gray-500 hover:text-gray-700 whitespace-nowrap">📈 执行跟踪</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Tab 1: Strategic Overview -->
+        <div id="content-overview" class="tab-content">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-5 card-shadow">
+                    <div class="text-sm text-gray-500 mb-1">3月前招生目标</div>
+                    <div class="text-3xl font-bold text-purple-600">80-100</div>
+                    <div class="text-xs text-gray-400">学生</div>
+                </div>
+                <div class="bg-white rounded-xl p-5 card-shadow">
+                    <div class="text-sm text-gray-500 mb-1">月被动收入目标</div>
+                    <div class="text-3xl font-bold text-green-600">$6,000</div>
+                    <div class="text-xs text-gray-400">约4万人民币</div>
+                </div>
+                <div class="bg-white rounded-xl p-5 card-shadow">
+                    <div class="text-sm text-gray-500 mb-1">录播营目标</div>
+                    <div class="text-3xl font-bold text-blue-600">50</div>
+                    <div class="text-xs text-gray-400">学生</div>
+                </div>
+                <div class="bg-white rounded-xl p-5 card-shadow">
+                    <div class="text-sm text-gray-500 mb-1">教师团队目标</div>
+                    <div class="text-3xl font-bold text-orange-600">3</div>
+                    <div class="text-xs text-gray-400">老师</div>
+                </div>
+            </div>
+
+            <!-- Strategic Positioning -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">🎯 战略定位一句话</h2>
+                <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border-l-4 border-purple-500">
+                    <p class="text-lg text-gray-700">通过社交媒体吸引<span class="font-bold text-purple-600">创业家庭</span>，以<span class="font-bold text-blue-600">英语考试</span>为入口，建立从<span class="font-bold text-green-600">KET到托福</span>的升学服务闭环，最终转型为高净值家庭的<span class="font-bold text-orange-600">教育顾问</span></p>
+                </div>
+            </div>
+
+            <!-- Three Dimensions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-5 card-shadow border-t-4 border-teal-500">
+                    <h3 class="font-bold text-teal-700 mb-3">维度一：事半功倍点</h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>✓ 考试研究→课纲→教学能力</li>
+                        <li>✓ 跨文化无障碍沟通</li>
+                        <li>✓ 哈佛资源、学术背书</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl p-5 card-shadow border-t-4 border-red-500">
+                    <h3 class="font-bold text-red-700 mb-3">维度二：市场痛点</h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>✓ 孩子「空心病」：无自驱力</li>
+                        <li>✓ 底层学习力激发需求</li>
+                        <li>✓ 需要全程陪伴的家庭</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl p-5 card-shadow border-t-4 border-yellow-500">
+                    <h3 class="font-bold text-yellow-700 mb-3">维度三：靠近钱和资源</h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>✓ 年收入百万/千万创业家庭</li>
+                        <li>✓ 有执行力的家庭（阿姨/家教）</li>
+                        <li>✓ 认识这些家长的圈子</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Current Phase -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📍 当前阶段</h2>
+                <div class="flex flex-wrap gap-3">
+                    <span class="px-4 py-2 bg-green-100 text-green-700 rounded-full font-medium">原事业上升期</span>
+                    <span class="px-1 py-2 text-gray-400">+</span>
+                    <span class="px-4 py-2 bg-orange-100 text-orange-700 rounded-full font-medium">整体事业转型期</span>
+                </div>
+                <p class="text-gray-600 mt-3">录播课找到节奏，有稳定销售伙伴；能力不止于考试培训，目标是做整体教育咨询</p>
+            </div>
+        </div>
+
+        <!-- Tab 2: Product Matrix -->
+        <div id="content-products" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">📦 产品矩阵与定价</h2>
+            
+            <!-- Product Hierarchy -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">考试层级与能力范围</h3>
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full">KET ✓</span>
+                    <span class="text-gray-300">→</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full">PET ✓</span>
+                    <span class="text-gray-300">→</span>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">小托福 ✓</span>
+                    <span class="text-gray-300">→</span>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">FCE ✓</span>
+                    <span class="text-gray-300">→</span>
+                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">托福 ✓</span>
+                    <span class="text-gray-300">→</span>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full">SSAT (外包)</span>
+                    <span class="text-gray-300">→</span>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full">SAT (外包)</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">✓ = 你亲自能做 | 外包 = 找其他老师做</p>
+            </div>
+
+            <!-- Live Course Pricing -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">🎥 直播课定价（人民币/小时）</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-3 text-left font-medium text-gray-600">定价档位</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-600">包含考试</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">1对1</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">小班(3-6人)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="px-4 py-3"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">基础档</span></td>
+                                <td class="px-4 py-3 text-gray-600">KET / PET</td>
+                                <td class="px-4 py-3 text-center font-bold text-gray-800">¥600</td>
+                                <td class="px-4 py-3 text-center font-bold text-gray-800">¥300-400</td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">进阶档</span></td>
+                                <td class="px-4 py-3 text-gray-600">PET / 小托福 / FCE</td>
+                                <td class="px-4 py-3 text-center font-bold text-gray-800">¥800-1000</td>
+                                <td class="px-4 py-3 text-center font-bold text-gray-800">¥400-500</td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-3"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">高级档</span></td>
+                                <td class="px-4 py-3 text-gray-600">FCE / 托福</td>
+                                <td class="px-4 py-3 text-center font-bold text-gray-800">¥1000-1200</td>
+                                <td class="px-4 py-3 text-center font-bold text-gray-800">¥500-600</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recorded Course Pricing -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">📹 录播陪跑营定价（人民币/期）</h3>
+                
+                <!-- With Live -->
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-purple-600 mb-2">带直播服务（全程6次直播，考冲4次）</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-purple-50">
+                                    <th class="px-4 py-2 text-left font-medium text-gray-600">考试</th>
+                                    <th class="px-4 py-2 text-center font-medium text-gray-600">全程营</th>
+                                    <th class="px-4 py-2 text-center font-medium text-gray-600">考冲营(减¥3000)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t">
+                                    <td class="px-4 py-2 text-gray-600">KET</td>
+                                    <td class="px-4 py-2 text-center font-bold">¥7,000-7,800</td>
+                                    <td class="px-4 py-2 text-center font-bold">¥4,000-4,800</td>
+                                </tr>
+                                <tr class="border-t bg-gray-50">
+                                    <td class="px-4 py-2 text-gray-600">PET</td>
+                                    <td class="px-4 py-2 text-center font-bold">¥8,800</td>
+                                    <td class="px-4 py-2 text-center font-bold">¥5,800</td>
+                                </tr>
+                                <tr class="border-t">
+                                    <td class="px-4 py-2 text-gray-600">FCE</td>
+                                    <td class="px-4 py-2 text-center font-bold">¥12,800</td>
+                                    <td class="px-4 py-2 text-center font-bold">¥9,800</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Without Live -->
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">不带直播服务</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="px-4 py-2 text-left font-medium text-gray-600">考试</th>
+                                    <th class="px-4 py-2 text-center font-medium text-gray-600">全程营</th>
+                                    <th class="px-4 py-2 text-center font-medium text-gray-600">考冲营</th>
+                                    <th class="px-4 py-2 text-center font-medium text-gray-600">教材部分</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t">
+                                    <td class="px-4 py-2 text-gray-600">KET</td>
+                                    <td class="px-4 py-2 text-center">¥5,800</td>
+                                    <td class="px-4 py-2 text-center">¥3,500</td>
+                                    <td class="px-4 py-2 text-center text-gray-400">-</td>
+                                </tr>
+                                <tr class="border-t bg-gray-50">
+                                    <td class="px-4 py-2 text-gray-600">PET</td>
+                                    <td class="px-4 py-2 text-center">¥6,000</td>
+                                    <td class="px-4 py-2 text-center">¥4,500</td>
+                                    <td class="px-4 py-2 text-center text-gray-400">-</td>
+                                </tr>
+                                <tr class="border-t">
+                                    <td class="px-4 py-2 text-gray-600">FCE</td>
+                                    <td class="px-4 py-2 text-center">¥7,800</td>
+                                    <td class="px-4 py-2 text-center">¥4,800</td>
+                                    <td class="px-4 py-2 text-center">¥3,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Structure -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="font-bold text-gray-700 mb-4">💸 成本结构</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h4 class="font-medium text-blue-700 mb-2">直播课成本</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• 老师交付成本（你抽30%，老师70%）</li>
+                            <li>• 直播平台成本</li>
+                            <li>• 小鹅通年费（课程存储）</li>
+                        </ul>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <h4 class="font-medium text-orange-700 mb-2">录播营成本</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• 销售老师：不带直播25% / 带直播35-40%</li>
+                            <li>• 运营老师：65-70%</li>
+                            <li>• 教材成本（各营不同）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Financial Calculator -->
+        <div id="content-calculator" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">💰 动态财务计算器</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Live Course Calculator -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="font-bold text-purple-700 mb-4">🎥 直播课收入计算</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">班级数量</label>
+                            <input type="range" id="live-classes" min="1" max="20" value="8" class="w-full input-range" oninput="calculateLive()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>1</span><span id="live-classes-val" class="font-bold text-purple-600">8</span><span>20</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">每班学生数</label>
+                            <input type="range" id="live-students" min="1" max="8" value="5" class="w-full input-range" oninput="calculateLive()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>1</span><span id="live-students-val" class="font-bold text-purple-600">5</span><span>8</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">每人每小时价格（元）</label>
+                            <input type="range" id="live-price" min="200" max="600" value="350" step="50" class="w-full input-range" oninput="calculateLive()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>200</span><span id="live-price-val" class="font-bold text-purple-600">350</span><span>600</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">每周课时数</label>
+                            <input type="range" id="live-hours" min="1" max="20" value="8" class="w-full input-range" oninput="calculateLive()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>1</span><span id="live-hours-val" class="font-bold text-purple-600">8</span><span>20</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">你的分成比例（%）</label>
+                            <input type="range" id="live-commission" min="20" max="50" value="30" class="w-full input-range" oninput="calculateLive()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>20%</span><span id="live-commission-val" class="font-bold text-purple-600">30%</span><span>50%</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-purple-50 rounded-lg">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <div class="text-sm text-gray-500">周流水</div>
+                                <div class="text-2xl font-bold text-purple-700" id="live-weekly-total">¥140,000</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">你的周收入</div>
+                                <div class="text-2xl font-bold text-green-600" id="live-weekly-income">¥42,000</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">月流水(4周)</div>
+                                <div class="text-xl font-bold text-purple-700" id="live-monthly-total">¥560,000</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">你的月收入</div>
+                                <div class="text-xl font-bold text-green-600" id="live-monthly-income">¥168,000</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recorded Course Calculator -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="font-bold text-orange-700 mb-4">📹 录播营收入计算</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">营类型</label>
+                            <select id="camp-type" class="w-full px-3 py-2 border rounded-lg" onchange="calculateRecorded()">
+                                <option value="ket-full">KET 全程营（带直播）¥7,800</option>
+                                <option value="ket-sprint">KET 考冲营（带直播）¥4,800</option>
+                                <option value="pet-full">PET 全程营（带直播）¥8,800</option>
+                                <option value="pet-sprint">PET 考冲营（带直播）¥5,800</option>
+                                <option value="fce-full">FCE 全程营（带直播）¥12,800</option>
+                                <option value="fce-sprint">FCE 考冲营（带直播）¥9,800</option>
+                                <option value="ket-full-no">KET 全程营（不带直播）¥5,800</option>
+                                <option value="pet-full-no">PET 全程营（不带直播）¥6,000</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">学生人数</label>
+                            <input type="range" id="camp-students" min="5" max="100" value="30" class="w-full input-range" oninput="calculateRecorded()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>5</span><span id="camp-students-val" class="font-bold text-orange-600">30</span><span>100</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">销售分成（%）</label>
+                            <input type="range" id="camp-sales" min="20" max="45" value="35" class="w-full input-range" oninput="calculateRecorded()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>20%</span><span id="camp-sales-val" class="font-bold text-orange-600">35%</span><span>45%</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">运营分成（%）</label>
+                            <input type="range" id="camp-ops" min="50" max="75" value="65" class="w-full input-range" oninput="calculateRecorded()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>50%</span><span id="camp-ops-val" class="font-bold text-orange-600">65%</span><span>75%</span></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">教材成本/人（元）</label>
+                            <input type="range" id="camp-material" min="0" max="500" value="100" step="50" class="w-full input-range" oninput="calculateRecorded()">
+                            <div class="flex justify-between text-xs text-gray-400"><span>0</span><span id="camp-material-val" class="font-bold text-orange-600">100</span><span>500</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-orange-50 rounded-lg">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <div class="text-sm text-gray-500">总流水</div>
+                                <div class="text-2xl font-bold text-orange-700" id="camp-total">¥234,000</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">销售成本</div>
+                                <div class="text-xl font-bold text-red-500" id="camp-sales-cost">-¥81,900</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">运营成本</div>
+                                <div class="text-xl font-bold text-red-500" id="camp-ops-cost">-¥98,865</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-500">教材成本</div>
+                                <div class="text-xl font-bold text-red-500" id="camp-material-cost">-¥3,000</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-orange-200 text-center">
+                            <div class="text-sm text-gray-500">你的净利润</div>
+                            <div class="text-3xl font-bold text-green-600" id="camp-profit">¥50,235</div>
+                            <div class="text-sm text-gray-400" id="camp-margin">利润率: 21.5%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combined Summary -->
+            <div class="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-white">
+                <h3 class="font-bold text-xl mb-4">📊 综合收入预估</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-white/20 rounded-lg p-4">
+                        <div class="text-sm opacity-80">直播课月收入</div>
+                        <div class="text-3xl font-bold" id="summary-live">¥168,000</div>
+                    </div>
+                    <div class="bg-white/20 rounded-lg p-4">
+                        <div class="text-sm opacity-80">录播营利润</div>
+                        <div class="text-3xl font-bold" id="summary-camp">¥50,235</div>
+                    </div>
+                    <div class="bg-white/30 rounded-lg p-4">
+                        <div class="text-sm opacity-80">总月收入</div>
+                        <div class="text-4xl font-bold pulse" id="summary-total">¥218,235</div>
+                        <div class="text-sm opacity-80 mt-1">≈ $<span id="summary-usd">30,310</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: User Journey Funnel -->
+        <div id="content-funnel" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">🎯 用户旅程与转化漏斗</h2>
+            
+            <!-- Funnel Visualization -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">学生升级路径</h3>
+                <div class="flex flex-col items-center space-y-2">
+                    <div class="funnel-step w-full max-w-2xl bg-gray-200 text-center py-4 rounded">
+                        <span class="font-medium text-gray-600">自媒体曝光 (小红书粉丝 1000+)</span>
+                    </div>
+                    <div class="text-2xl text-gray-300">↓</div>
+                    <div class="funnel-step w-11/12 max-w-xl bg-blue-100 text-center py-4 rounded">
+                        <span class="font-medium text-blue-700">私信咨询 / 加微信</span>
+                    </div>
+                    <div class="text-2xl text-gray-300">↓</div>
+                    <div class="funnel-step w-10/12 max-w-lg bg-green-100 text-center py-4 rounded">
+                        <span class="font-medium text-green-700">公立体系 → 录播陪跑营 (50人)</span>
+                    </div>
+                    <div class="text-2xl text-gray-300">↓</div>
+                    <div class="funnel-step w-9/12 max-w-md bg-purple-100 text-center py-4 rounded">
+                        <span class="font-medium text-purple-700">国际路线 → 直播小班课 (80-100人)</span>
+                    </div>
+                    <div class="text-2xl text-gray-300">↓</div>
+                    <div class="funnel-step w-8/12 max-w-sm bg-orange-100 text-center py-4 rounded">
+                        <span class="font-medium text-orange-700">升学咨询客户（毕业后）</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Journey Map -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">客户旅程地图</h3>
+                <div class="overflow-x-auto">
+                    <div class="flex space-x-4 min-w-max pb-4">
+                        <!-- Stage 1 -->
+                        <div class="w-64 bg-teal-50 rounded-lg p-4 border-t-4 border-teal-500">
+                            <div class="font-bold text-teal-700 mb-2">1. 认知</div>
+                            <div class="text-sm text-gray-600 mb-2">触点：小红书、短视频</div>
+                            <div class="text-sm text-gray-600 mb-2">你的动作：发布教育干货</div>
+                            <div class="text-xs text-teal-600 bg-teal-100 px-2 py-1 rounded">AI：选题+初稿生成</div>
+                        </div>
+                        <!-- Stage 2 -->
+                        <div class="w-64 bg-blue-50 rounded-lg p-4 border-t-4 border-blue-500">
+                            <div class="font-bold text-blue-700 mb-2">2. 兴趣</div>
+                            <div class="text-sm text-gray-600 mb-2">触点：私信、评论互动</div>
+                            <div class="text-sm text-gray-600 mb-2">你的动作：引导加微信</div>
+                            <div class="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">AI：自动回复模板</div>
+                        </div>
+                        <!-- Stage 3 -->
+                        <div class="w-64 bg-yellow-50 rounded-lg p-4 border-t-4 border-yellow-500">
+                            <div class="font-bold text-yellow-700 mb-2">3. 考虑</div>
+                            <div class="text-sm text-gray-600 mb-2">触点：测评、试听课</div>
+                            <div class="text-sm text-gray-600 mb-2">你的动作：销售跟进</div>
+                            <div class="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">AI：生成测评报告</div>
+                        </div>
+                        <!-- Stage 4 -->
+                        <div class="w-64 bg-green-50 rounded-lg p-4 border-t-4 border-green-500">
+                            <div class="font-bold text-green-700 mb-2">4. 购买</div>
+                            <div class="text-sm text-gray-600 mb-2">触点：选课、付款</div>
+                            <div class="text-sm text-gray-600 mb-2">你的动作：匹配班级老师</div>
+                            <div class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">AI：发送开课信息</div>
+                        </div>
+                        <!-- Stage 5 -->
+                        <div class="w-64 bg-purple-50 rounded-lg p-4 border-t-4 border-purple-500">
+                            <div class="font-bold text-purple-700 mb-2">5. 复购</div>
+                            <div class="text-sm text-gray-600 mb-2">触点：考试通过</div>
+                            <div class="text-sm text-gray-600 mb-2">你的动作：推荐下阶段</div>
+                            <div class="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">AI：追踪学习进度</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hook Products -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="font-bold text-gray-700 mb-4">🎣 留住客源的「钩子产品」</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="text-2xl mb-2">📝</div>
+                        <div class="font-medium text-gray-700">免费水平测评</div>
+                        <div class="text-sm text-gray-500">AI自动化 → 生成报告 → 加微信</div>
+                    </div>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="text-2xl mb-2">📅</div>
+                        <div class="font-medium text-gray-700">学习计划模板</div>
+                        <div class="text-sm text-gray-500">PDF下载 → 关注公众号</div>
+                    </div>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="text-2xl mb-2">👥</div>
+                        <div class="font-medium text-gray-700">家长微信群</div>
+                        <div class="text-sm text-gray-500">按考试分群 → 定期干货答疑</div>
+                    </div>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="text-2xl mb-2">🎬</div>
+                        <div class="font-medium text-gray-700">录播试听课</div>
+                        <div class="text-sm text-gray-500">免费体验 → 转化直播课</div>
+                    </div>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="text-2xl mb-2">💡</div>
+                        <div class="font-medium text-gray-700">教育规划咨询</div>
+                        <div class="text-sm text-gray-500">付费¥199 → 筛选高意向</div>
+                    </div>
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="text-2xl mb-2">🤖</div>
+                        <div class="font-medium text-gray-700">公众号AI助手</div>
+                        <div class="text-sm text-gray-500">7×24答疑 → 留住每一个咨询</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: AI Automation -->
+        <div id="content-ai" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">🤖 AI自动化规划</h2>
+            
+            <!-- AI Priority Matrix -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">优先级矩阵</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-3 text-left font-medium text-gray-600">工作流</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-600">AI工具建议</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">优先级</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="px-4 py-3 font-medium">小红书选题+初稿</td>
+                                <td class="px-4 py-3 text-gray-600">Claude/GPT + 模板</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★★★</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3 font-medium">私信自动回复</td>
+                                <td class="px-4 py-3 text-gray-600">微信机器人/智能体</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★★★</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-3 font-medium">学生水平测评</td>
+                                <td class="px-4 py-3 text-gray-600">自建测评工具</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★★☆</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3 font-medium">家长答疑FAQ</td>
+                                <td class="px-4 py-3 text-gray-600">FAQ知识库+AI</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★★☆</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-3 font-medium">公众号智能体</td>
+                                <td class="px-4 py-3 text-gray-600">微信公众号API</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★★☆</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3 font-medium">学习进度报告</td>
+                                <td class="px-4 py-3 text-gray-600">数据模板+AI填充</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★☆☆</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-3 font-medium">AI备考助手</td>
+                                <td class="px-4 py-3 text-gray-600">定制智能体</td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-500">★★★☆☆</span></td>
+                                <td class="px-4 py-3 text-center"><select class="border rounded px-2 py-1 text-xs"><option>待开始</option><option>进行中</option><option>已完成</option></select></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AI Product Ideas -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="font-bold text-gray-700 mb-4">💡 AI产品升级方向（待测试）</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border-2 border-dashed border-purple-200 rounded-lg p-4 bg-purple-50">
+                        <div class="font-medium text-purple-700 mb-2">🎯 AI备考教练</div>
+                        <div class="text-sm text-gray-600">学生可以通过AI问考试问题，获得即时答疑和练习推荐</div>
+                        <div class="mt-2 text-xs text-purple-500">需测试：学生是否有需求？愿意付费吗？</div>
+                    </div>
+                    <div class="border-2 border-dashed border-blue-200 rounded-lg p-4 bg-blue-50">
+                        <div class="font-medium text-blue-700 mb-2">📊 智能学习报告</div>
+                        <div class="text-sm text-gray-600">自动追踪学生进度，生成可视化报告给家长</div>
+                        <div class="mt-2 text-xs text-blue-500">需测试：家长是否看重？能提高续费率吗？</div>
+                    </div>
+                    <div class="border-2 border-dashed border-green-200 rounded-lg p-4 bg-green-50">
+                        <div class="font-medium text-green-700 mb-2">🔄 自动化招生</div>
+                        <div class="text-sm text-gray-600">从私信到入班全流程AI辅助，减少人工跟进</div>
+                        <div class="mt-2 text-xs text-green-500">需测试：转化率是否下降？体验是否OK？</div>
+                    </div>
+                    <div class="border-2 border-dashed border-orange-200 rounded-lg p-4 bg-orange-50">
+                        <div class="font-medium text-orange-700 mb-2">📱 公众号AI助手</div>
+                        <div class="text-sm text-gray-600">基于你写的内容，AI自动回答家长问题</div>
+                        <div class="mt-2 text-xs text-orange-500">已有基础：微信公众号智能体功能</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 6: Execution Tracker -->
+        <div id="content-tracker" class="tab-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">📈 执行跟踪</h2>
+            
+            <!-- Weekly Tracker -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700">本周跟踪（做5休2）</h3>
+                    <input type="week" class="border rounded px-3 py-1" value="2024-W01">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-3 text-left font-medium text-gray-600">指标</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">目标</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">实际</th>
+                                <th class="px-4 py-3 text-center font-medium text-gray-600">完成率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="px-4 py-3">小红书发布条数</td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="4" class="w-16 border rounded text-center"></td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="0" class="w-16 border rounded text-center" onchange="updateProgress(this)"></td>
+                                <td class="px-4 py-3 text-center"><span class="progress-rate">0%</span></td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3">新增粉丝数</td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="50" class="w-16 border rounded text-center"></td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="0" class="w-16 border rounded text-center" onchange="updateProgress(this)"></td>
+                                <td class="px-4 py-3 text-center"><span class="progress-rate">0%</span></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-3">私信咨询数</td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="10" class="w-16 border rounded text-center"></td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="0" class="w-16 border rounded text-center" onchange="updateProgress(this)"></td>
+                                <td class="px-4 py-3 text-center"><span class="progress-rate">0%</span></td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3">试听课学生数</td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="5" class="w-16 border rounded text-center"></td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="0" class="w-16 border rounded text-center" onchange="updateProgress(this)"></td>
+                                <td class="px-4 py-3 text-center"><span class="progress-rate">0%</span></td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-4 py-3">新入班学生数</td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="3" class="w-16 border rounded text-center"></td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="0" class="w-16 border rounded text-center" onchange="updateProgress(this)"></td>
+                                <td class="px-4 py-3 text-center"><span class="progress-rate">0%</span></td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-4 py-3">本周收入(元)</td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="10000" class="w-20 border rounded text-center"></td>
+                                <td class="px-4 py-3 text-center"><input type="number" value="0" class="w-20 border rounded text-center" onchange="updateProgress(this)"></td>
+                                <td class="px-4 py-3 text-center"><span class="progress-rate">0%</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Weekly Reflection -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+                <h3 class="font-bold text-gray-700 mb-4">本周复盘</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">这周做对了什么？</label>
+                        <textarea class="w-full border rounded-lg p-3 h-24" placeholder="记录本周的成功和亮点..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">遇到什么卡点？</label>
+                        <textarea class="w-full border rounded-lg p-3 h-24" placeholder="记录本周的困难和挑战..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">下周最重要的3件事</label>
+                        <textarea class="w-full border rounded-lg p-3 h-24" placeholder="1. \n2. \n3. "></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">我是否在主线上？</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center"><input type="radio" name="mainline" class="mr-2"> 是，继续保持</label>
+                            <label class="flex items-center"><input type="radio" name="mainline" class="mr-2"> 有偏离，需纠正</label>
+                            <label class="flex items-center"><input type="radio" name="mainline" class="mr-2"> 需要调整主线</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Goals -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="font-bold text-gray-700 mb-4">月度目标进度</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>在班学生数 (目标: 80-100)</span>
+                            <span class="font-medium">0 / 100</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-purple-600 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>录播营学生 (目标: 50)</span>
+                            <span class="font-medium">0 / 50</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-orange-600 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>教师团队 (目标: 3)</span>
+                            <span class="font-medium">0 / 3</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-green-600 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>小红书粉丝 (目标: 1000)</span>
+                            <span class="font-medium">0 / 1000</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-blue-600 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-400">Vico Education 战略仪表盘 | 持续迭代，持续进步</p>
+            <p class="text-sm text-gray-500 mt-2">「不要一起一落，要持续性动作」</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(el => {
+                el.classList.remove('tab-active');
+                el.classList.add('text-gray-500');
+            });
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('tab-active');
+            document.getElementById('tab-' + tabName).classList.remove('text-gray-500');
+        }
+
+        // Live course calculator
+        function calculateLive() {
+            const classes = parseInt(document.getElementById('live-classes').value);
+            const students = parseInt(document.getElementById('live-students').value);
+            const price = parseInt(document.getElementById('live-price').value);
+            const hours = parseInt(document.getElementById('live-hours').value);
+            const commission = parseInt(document.getElementById('live-commission').value) / 100;
+
+            document.getElementById('live-classes-val').textContent = classes;
+            document.getElementById('live-students-val').textContent = students;
+            document.getElementById('live-price-val').textContent = price;
+            document.getElementById('live-hours-val').textContent = hours;
+            document.getElementById('live-commission-val').textContent = commission * 100 + '%';
+
+            const weeklyTotal = classes * students * price * hours;
+            const weeklyIncome = weeklyTotal * commission;
+            const monthlyTotal = weeklyTotal * 4;
+            const monthlyIncome = weeklyIncome * 4;
+
+            document.getElementById('live-weekly-total').textContent = '¥' + weeklyTotal.toLocaleString();
+            document.getElementById('live-weekly-income').textContent = '¥' + weeklyIncome.toLocaleString();
+            document.getElementById('live-monthly-total').textContent = '¥' + monthlyTotal.toLocaleString();
+            document.getElementById('live-monthly-income').textContent = '¥' + monthlyIncome.toLocaleString();
+
+            document.getElementById('summary-live').textContent = '¥' + monthlyIncome.toLocaleString();
+            updateTotal();
+        }
+
+        // Recorded course calculator
+        const campPrices = {
+            'ket-full': 7800, 'ket-sprint': 4800,
+            'pet-full': 8800, 'pet-sprint': 5800,
+            'fce-full': 12800, 'fce-sprint': 9800,
+            'ket-full-no': 5800, 'pet-full-no': 6000
+        };
+
+        function calculateRecorded() {
+            const campType = document.getElementById('camp-type').value;
+            const students = parseInt(document.getElementById('camp-students').value);
+            const salesRate = parseInt(document.getElementById('camp-sales').value) / 100;
+            const opsRate = parseInt(document.getElementById('camp-ops').value) / 100;
+            const material = parseInt(document.getElementById('camp-material').value);
+
+            document.getElementById('camp-students-val').textContent = students;
+            document.getElementById('camp-sales-val').textContent = (salesRate * 100) + '%';
+            document.getElementById('camp-ops-val').textContent = (opsRate * 100) + '%';
+            document.getElementById('camp-material-val').textContent = material;
+
+            const price = campPrices[campType];
+            const total = price * students;
+            const salesCost = total * salesRate;
+            const afterSales = total - salesCost;
+            const opsCost = afterSales * opsRate;
+            const materialCost = material * students;
+            const profit = afterSales - opsCost - materialCost;
+            const margin = (profit / total * 100).toFixed(1);
+
+            document.getElementById('camp-total').textContent = '¥' + total.toLocaleString();
+            document.getElementById('camp-sales-cost').textContent = '-¥' + Math.round(salesCost).toLocaleString();
+            document.getElementById('camp-ops-cost').textContent = '-¥' + Math.round(opsCost).toLocaleString();
+            document.getElementById('camp-material-cost').textContent = '-¥' + materialCost.toLocaleString();
+            document.getElementById('camp-profit').textContent = '¥' + Math.round(profit).toLocaleString();
+            document.getElementById('camp-margin').textContent = '利润率: ' + margin + '%';
+
+            document.getElementById('summary-camp').textContent = '¥' + Math.round(profit).toLocaleString();
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const live = parseInt(document.getElementById('summary-live').textContent.replace(/[¥,]/g, '')) || 0;
+            const camp = parseInt(document.getElementById('summary-camp').textContent.replace(/[¥,]/g, '')) || 0;
+            const total = live + camp;
+            document.getElementById('summary-total').textContent = '¥' + total.toLocaleString();
+            document.getElementById('summary-usd').textContent = Math.round(total / 7.2).toLocaleString();
+        }
+
+        function updateProgress(input) {
+            const row = input.closest('tr');
+            const target = parseInt(row.querySelectorAll('input')[0].value) || 1;
+            const actual = parseInt(row.querySelectorAll('input')[1].value) || 0;
+            const rate = Math.round(actual / target * 100);
+            row.querySelector('.progress-rate').textContent = rate + '%';
+            row.querySelector('.progress-rate').className = 'progress-rate font-medium ' + 
+                (rate >= 100 ? 'text-green-600' : rate >= 50 ? 'text-yellow-600' : 'text-red-600');
+        }
+
+        // Initialize calculators
+        calculateLive();
+        calculateRecorded();
+    </script>
+</body>
+</html>
