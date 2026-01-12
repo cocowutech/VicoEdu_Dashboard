@@ -315,12 +315,19 @@ export default function CalculatorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newTeacherName.trim(), hourlyRate: newTeacherRate }),
       })
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error('Error adding teacher:', errorData)
+        alert('添加教师失败，请重试')
+        return
+      }
       const newTeacher = await res.json()
-      setTeachers([...teachers, newTeacher])
+      setTeachers(prev => [...prev, newTeacher])
       setNewTeacherName('')
       setNewTeacherRate(0)
     } catch (error) {
       console.error('Error adding teacher:', error)
+      alert('添加教师失败，请重试')
     }
   }
 
