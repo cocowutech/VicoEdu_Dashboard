@@ -221,8 +221,14 @@ export default function CalculatorPage() {
   const totalFixedCosts = fixedCosts.reduce((sum, c) => sum + calcMonthlyAmount(c), 0)
 
   // ==================== Summary ====================
-  const netMonthlyIncome = totalLiveMonthlyProfit + totalCampProfit - totalFixedCosts
+  // 月度净收入 = 直播课月利润 - 固定成本 (录播营是一次性收入，不计入月度)
+  const netMonthlyIncome = totalLiveMonthlyProfit - totalFixedCosts
   const netMonthlyIncomeUSD = Math.round(netMonthlyIncome / 7.2)
+
+  // 年度净收入 = 直播课学期总利润 + 录播营总利润 - 年度固定成本
+  const annualFixedCosts = totalFixedCosts * 12
+  const netAnnualIncome = totalLiveCourseProfit + totalCampProfit - annualFixedCosts
+  const netAnnualIncomeUSD = Math.round(netAnnualIncome / 7.2)
 
   // ==================== Export Function ====================
   const exportToCSV = () => {
@@ -455,8 +461,9 @@ export default function CalculatorPage() {
                   </td>
                   <td className="px-2 py-2">
                     <input
-                      type="number"
-                      value={c.lessonPricePerStudent}
+                      type="text"
+                      inputMode="numeric"
+                      value={c.lessonPricePerStudent || ''}
                       onChange={(e) => updateLiveClass(c.id, 'lessonPricePerStudent', e.target.value)}
                       className="w-16 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
                     />
@@ -464,8 +471,9 @@ export default function CalculatorPage() {
                   <td className="px-2 py-2">
                     <div className="flex flex-col items-center gap-1">
                       <input
-                        type="number"
-                        value={c.studentCount}
+                        type="text"
+                        inputMode="numeric"
+                        value={c.studentCount || ''}
                         onChange={(e) => updateLiveClass(c.id, 'studentCount', e.target.value)}
                         className="w-14 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
                       />
@@ -480,9 +488,9 @@ export default function CalculatorPage() {
                   </td>
                   <td className="px-2 py-2">
                     <input
-                      type="number"
-                      step="0.5"
-                      value={c.lessonDuration}
+                      type="text"
+                      inputMode="decimal"
+                      value={c.lessonDuration || ''}
                       onChange={(e) => updateLiveClass(c.id, 'lessonDuration', e.target.value)}
                       className="w-14 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
                     />
@@ -492,8 +500,9 @@ export default function CalculatorPage() {
                   </td>
                   <td className="px-2 py-2">
                     <input
-                      type="number"
-                      value={c.weeklyLessons}
+                      type="text"
+                      inputMode="numeric"
+                      value={c.weeklyLessons || ''}
                       onChange={(e) => updateLiveClass(c.id, 'weeklyLessons', e.target.value)}
                       className="w-14 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
                     />
@@ -518,8 +527,9 @@ export default function CalculatorPage() {
                   </td>
                   <td className="px-2 py-2">
                     <input
-                      type="number"
-                      value={c.totalLessons}
+                      type="text"
+                      inputMode="numeric"
+                      value={c.totalLessons || ''}
                       onChange={(e) => updateLiveClass(c.id, 'totalLessons', e.target.value)}
                       className="w-14 px-1 py-1 border rounded text-center text-gray-800 hover:bg-blue-50"
                     />
@@ -757,9 +767,10 @@ export default function CalculatorPage() {
                   </td>
                   <td className="px-2 py-2">
                     <input
-                      type="number"
-                      value={c.amount}
-                      onChange={(e) => updateFixedCost(c.id, 'amount', Number(e.target.value))}
+                      type="text"
+                      inputMode="numeric"
+                      value={c.amount || ''}
+                      onChange={(e) => updateFixedCost(c.id, 'amount', Number(e.target.value) || 0)}
                       className="w-24 px-2 py-1 border rounded text-right text-gray-800 hover:bg-blue-50"
                     />
                   </td>
@@ -810,26 +821,54 @@ export default function CalculatorPage() {
       {/* ==================== Summary ==================== */}
       <div className="bg-gradient-to-r from-amber-600 to-blue-600 rounded-xl p-6 text-white">
         <h3 className="font-bold text-xl mb-4">综合收入汇总</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-          <div className="bg-white/20 rounded-lg p-4">
-            <div className="text-sm opacity-80">直播课月利润</div>
-            <div className="text-2xl font-bold">{totalLiveMonthlyProfit.toFixed(0)}</div>
+
+        {/* 月度收入 */}
+        <div className="mb-4">
+          <h4 className="text-sm opacity-70 mb-2">📅 月度稳定收入（直播课）</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="bg-white/20 rounded-lg p-4">
+              <div className="text-sm opacity-80">直播课月利润</div>
+              <div className="text-2xl font-bold">{totalLiveMonthlyProfit.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4">
+              <div className="text-sm opacity-80">月固定成本</div>
+              <div className="text-2xl font-bold text-red-300">-{totalFixedCosts.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/30 rounded-lg p-4">
+              <div className="text-sm opacity-80">净月收入</div>
+              <div className="text-3xl font-bold">{netMonthlyIncome.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/30 rounded-lg p-4">
+              <div className="text-sm opacity-80">约 USD</div>
+              <div className="text-3xl font-bold">${netMonthlyIncomeUSD.toLocaleString()}</div>
+            </div>
           </div>
-          <div className="bg-white/20 rounded-lg p-4">
-            <div className="text-sm opacity-80">录播营利润</div>
-            <div className="text-2xl font-bold">{totalCampProfit.toFixed(0)}</div>
-          </div>
-          <div className="bg-white/20 rounded-lg p-4">
-            <div className="text-sm opacity-80">固定成本</div>
-            <div className="text-2xl font-bold text-red-300">-{totalFixedCosts.toFixed(0)}</div>
-          </div>
-          <div className="bg-white/30 rounded-lg p-4">
-            <div className="text-sm opacity-80">净月收入</div>
-            <div className="text-3xl font-bold">{netMonthlyIncome.toFixed(0)}</div>
-          </div>
-          <div className="bg-white/30 rounded-lg p-4">
-            <div className="text-sm opacity-80">美元换算</div>
-            <div className="text-3xl font-bold">${netMonthlyIncomeUSD.toLocaleString()}</div>
+        </div>
+
+        {/* 年度收入 */}
+        <div>
+          <h4 className="text-sm opacity-70 mb-2">📆 年度总收入（直播课学期 + 录播营）</h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+            <div className="bg-white/20 rounded-lg p-4">
+              <div className="text-sm opacity-80">直播课学期利润</div>
+              <div className="text-2xl font-bold">{totalLiveCourseProfit.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4">
+              <div className="text-sm opacity-80">录播营利润</div>
+              <div className="text-2xl font-bold">{totalCampProfit.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4">
+              <div className="text-sm opacity-80">年固定成本</div>
+              <div className="text-2xl font-bold text-red-300">-{annualFixedCosts.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/30 rounded-lg p-4">
+              <div className="text-sm opacity-80">年度净收入</div>
+              <div className="text-3xl font-bold">{netAnnualIncome.toFixed(0)}</div>
+            </div>
+            <div className="bg-white/30 rounded-lg p-4">
+              <div className="text-sm opacity-80">约 USD</div>
+              <div className="text-3xl font-bold">${netAnnualIncomeUSD.toLocaleString()}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -865,12 +904,12 @@ export default function CalculatorPage() {
                     className="flex-1 px-3 py-2 border rounded-lg text-gray-900"
                   />
                   <input
-                    type="number"
-                    value={newTeacherRate}
-                    onChange={(e) => setNewTeacherRate(Number(e.target.value))}
+                    type="text"
+                    inputMode="numeric"
+                    value={newTeacherRate || ''}
+                    onChange={(e) => setNewTeacherRate(Number(e.target.value) || 0)}
                     placeholder="时薪"
                     className="w-24 px-3 py-2 border rounded-lg text-gray-900 text-center"
-                    min={0}
                   />
                   <button
                     onClick={addTeacher}
@@ -900,11 +939,11 @@ export default function CalculatorPage() {
                       <div className="flex items-center gap-1">
                         <span className="text-sm text-gray-500">时薪:</span>
                         <input
-                          type="number"
-                          value={t.hourlyRate}
-                          onChange={(e) => updateTeacher(t.id, 'hourlyRate', Number(e.target.value))}
+                          type="text"
+                          inputMode="numeric"
+                          value={t.hourlyRate || ''}
+                          onChange={(e) => updateTeacher(t.id, 'hourlyRate', Number(e.target.value) || 0)}
                           className="w-20 px-2 py-1 border rounded text-center text-gray-900"
-                          min={0}
                         />
                       </div>
                       {t.isSelf && (

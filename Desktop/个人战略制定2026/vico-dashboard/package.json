@@ -1,0 +1,43 @@
+{
+  "name": "vico-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0 <23.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
+    "start": "next start",
+    "lint": "eslint",
+    "db:seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "db:reset": "npx prisma db push --force-reset && npm run db:seed"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.8.0",
+    "@prisma/adapter-libsql": "^5.22.0",
+    "@prisma/client": "^5.22.0",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
+    "next": "16.0.10",
+    "prisma": "^5.22.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.10",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}

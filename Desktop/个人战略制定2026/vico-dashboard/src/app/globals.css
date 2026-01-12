@@ -40,6 +40,8 @@ button, a, [role="button"] {
 /* Ensure inputs work properly */
 input, textarea, select {
   transition: border-color 150ms ease, box-shadow 150ms ease;
+  color: #1f2937;
+  -webkit-text-fill-color: #1f2937;
 }
 
 /* Fix select dropdown text visibility */
