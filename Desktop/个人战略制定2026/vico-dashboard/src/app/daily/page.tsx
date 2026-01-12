@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 // Types
 interface CalendarEvent {
@@ -27,6 +27,14 @@ interface CalendarSource {
   url: string
   color: string
   enabled: boolean
+}
+
+interface StickyNote {
+  id: string
+  content: string
+  x: number
+  y: number
+  color: string
 }
 
 // Constants
@@ -323,6 +331,9 @@ export default function DailyPlannerPage() {
   const [newSourceUrl, setNewSourceUrl] = useState('')
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
+  const [stickyNotes, setStickyNotes] = useState<StickyNote[]>([])
+  const [draggingNote, setDraggingNote] = useState<string | null>(null)
+  const dragRef = useRef<{ offsetX: number; offsetY: number; startX: number; startY: number } | null>(null)
 
   const weekDates = getWeekDates(currentDate)
 
@@ -406,6 +417,19 @@ export default function DailyPlannerPage() {
   useEffect(() => {
     localStorage.setItem('synced_calendar_events', JSON.stringify(syncedEvents))
   }, [syncedEvents])
+
+  // Load sticky notes
+  useEffect(() => {
+    const savedNotes = localStorage.getItem('sticky_notes')
+    if (savedNotes) {
+      setStickyNotes(JSON.parse(savedNotes))
+    }
+  }, [])
+
+  // Save sticky notes
+  useEffect(() => {
+    localStorage.setItem('sticky_notes', JSON.stringify(stickyNotes))
+  }, [stickyNotes])
 
   const allEvents = [...events, ...syncedEvents]
 
@@ -774,6 +798,100 @@ export default function DailyPlannerPage() {
     }
   }
 
+  // Sticky note colors
+  const stickyColors = ['bg-yellow-200', 'bg-pink-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200', 'bg-orange-200']
+
+  // Add a new sticky note
+  const addStickyNote = () => {
+    const newNote: StickyNote = {
+      id: Date.now().toString(),
+      content: '',
+      x: 100 + Math.random() * 100,
+      y: 100 + Math.random() * 100,
+      color: stickyColors[Math.floor(Math.random() * stickyColors.length)]
+    }
+    setStickyNotes(prev => [...prev, newNote])
+  }
+
+  // Update sticky note content
+  const updateStickyNote = (id: string, content: string) => {
+    setStickyNotes(prev => prev.map(note =>
+      note.id === id ? { ...note, content } : note
+    ))
+  }
+
+  // Update sticky note color
+  const updateStickyNoteColor = (id: string, color: string) => {
+    setStickyNotes(prev => prev.map(note =>
+      note.id === id ? { ...note, color } : note
+    ))
+  }
+
+  // Delete sticky note
+  const deleteStickyNote = (id: string) => {
+    setStickyNotes(prev => prev.filter(note => note.id !== id))
+  }
+
+  // Handle drag start
+  const handleDragStart = (e: React.MouseEvent, noteId: string) => {
+    e.preventDefault()
+    const note = stickyNotes.find(n => n.id === noteId)
+    if (!note) return
+
+    setDraggingNote(noteId)
+    dragRef.current = {
+      offsetX: e.clientX - note.x,
+      offsetY: e.clientY - note.y,
+      startX: note.x,
+      startY: note.y
+    }
+  }
+
+  // Handle drag - use useCallback for better performance
+  const handleDrag = useCallback((e: MouseEvent) => {
+    if (!draggingNote || !dragRef.current) return
+
+    const newX = e.clientX - dragRef.current.offsetX
+    const newY = e.clientY - dragRef.current.offsetY
+
+    // Direct DOM manipulation for smooth dragging
+    const noteEl = document.getElementById(`sticky-note-${draggingNote}`)
+    if (noteEl) {
+      noteEl.style.left = `${newX}px`
+      noteEl.style.top = `${newY}px`
+    }
+  }, [draggingNote])
+
+  // Handle drag end - update state only once
+  const handleDragEnd = useCallback((e: MouseEvent) => {
+    if (!draggingNote || !dragRef.current) {
+      setDraggingNote(null)
+      return
+    }
+
+    const newX = e.clientX - dragRef.current.offsetX
+    const newY = e.clientY - dragRef.current.offsetY
+
+    setStickyNotes(prev => prev.map(note =>
+      note.id === draggingNote ? { ...note, x: newX, y: newY } : note
+    ))
+
+    setDraggingNote(null)
+    dragRef.current = null
+  }, [draggingNote])
+
+  // Add global event listeners for smoother dragging
+  useEffect(() => {
+    if (draggingNote) {
+      window.addEventListener('mousemove', handleDrag)
+      window.addEventListener('mouseup', handleDragEnd)
+      return () => {
+        window.removeEventListener('mousemove', handleDrag)
+        window.removeEventListener('mouseup', handleDragEnd)
+      }
+    }
+  }, [draggingNote, handleDrag, handleDragEnd])
+
   // Print Simple View
   const printSimpleView = () => {
     const printWindow = window.open('', '_blank')
@@ -876,7 +994,7 @@ export default function DailyPlannerPage() {
             今天
           </button>
           <span className="text-sm text-gray-500">
-            本周 <strong className="text-amber-600">{allEvents.filter(e => weekDates.some(d => isSameDay(d, new Date(e.start)))).length}</strong> 个事件
+            本周 <strong className="text-amber-600">{allEvents.filter(e => weekDates.some(d => isSameDay(d, new Date(e.start)))).length + stickyNotes.length}</strong> 个事件
           </span>
         </div>
       </div>
@@ -1087,6 +1205,12 @@ export default function DailyPlannerPage() {
             className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 flex items-center gap-2"
           >
             <span>+</span> Add Event
+          </button>
+          <button
+            onClick={addStickyNote}
+            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 flex items-center gap-2 shadow-lg"
+          >
+            <span>✨</span> 魔法贴
           </button>
         </div>
       </div>
@@ -1516,6 +1640,55 @@ export default function DailyPlannerPage() {
           </div>
         </div>
       )}
+
+      {/* Sticky Notes - Draggable */}
+      {stickyNotes.map(note => (
+        <div
+          key={note.id}
+          id={`sticky-note-${note.id}`}
+          className={`fixed ${note.color} rounded-lg shadow-xl cursor-move z-40 select-none ${draggingNote === note.id ? 'shadow-2xl scale-105' : 'hover:shadow-2xl'}`}
+          style={{
+            left: note.x,
+            top: note.y,
+            width: 160,
+            minHeight: 180,
+            transition: draggingNote === note.id ? 'none' : 'box-shadow 0.2s, transform 0.2s',
+          }}
+          onMouseDown={(e) => handleDragStart(e, note.id)}
+        >
+          <div className="p-3 h-full flex flex-col">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-lg cursor-grab active:cursor-grabbing">✨</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); deleteStickyNote(note.id) }}
+                className="w-5 h-5 rounded-full bg-red-400 text-white text-xs flex items-center justify-center hover:bg-red-500 opacity-60 hover:opacity-100"
+              >
+                ×
+              </button>
+            </div>
+            <textarea
+              value={note.content}
+              onChange={(e) => updateStickyNote(note.id, e.target.value)}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="flex-1 bg-transparent border-none resize-none text-sm text-gray-700 placeholder-gray-400 focus:outline-none w-full cursor-text"
+              placeholder="写下你的想法..."
+            />
+            {/* Color picker */}
+            <div
+              className="flex gap-1 mt-2 pt-2 border-t border-black/10"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {stickyColors.map(color => (
+                <button
+                  key={color}
+                  onClick={() => updateStickyNoteColor(note.id, color)}
+                  className={`w-5 h-5 rounded-full ${color} border-2 transition-transform hover:scale-110 ${note.color === color ? 'border-gray-600 scale-110' : 'border-transparent'}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
