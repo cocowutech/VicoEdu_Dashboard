@@ -69,6 +69,9 @@ export default function CommissionPage() {
   // 拖拽排序状态
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
+  // 新增课程ID追踪（新增的课程编辑时不联动更新计算列表）
+  const [newCourseIds, setNewCourseIds] = useState<Set<number>>(new Set())
+
   // 备注编辑状态
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
   const [editingNoteText, setEditingNoteText] = useState<string>('')
@@ -630,11 +633,12 @@ export default function CommissionPage() {
       body: JSON.stringify({ id, [field]: numValue }),
     })
 
-    // 检查是否有受影响的计算记录并提示更新
-    // 使用原始课程名查找（因为可能是在修改课程名）
-    const courseNameToCheck = field === 'courseName' ? currentCourse.courseName : updatedCourse.courseName
-    await updateAffectedCalculations(courseNameToCheck, updatedCourse)
-  }, [courseMaterials, updateAffectedCalculations])
+    // 只对原有课程触发联动更新，新增的课程不影响已有计算记录
+    if (!newCourseIds.has(id)) {
+      const courseNameToCheck = field === 'courseName' ? currentCourse.courseName : updatedCourse.courseName
+      await updateAffectedCalculations(courseNameToCheck, updatedCourse)
+    }
+  }, [courseMaterials, updateAffectedCalculations, newCourseIds])
 
   // 拖拽开始
   const handleDragStart = (index: number) => {
@@ -701,6 +705,7 @@ export default function CommissionPage() {
       if (!res.ok) throw new Error('Failed to create')
       const newMaterial = await res.json()
       setCourseMaterials(prev => [...prev, newMaterial])
+      setNewCourseIds(prev => new Set(prev).add(newMaterial.id))
     } catch (error) {
       console.error('Error creating course material:', error)
       alert('新增失败，请重试')
