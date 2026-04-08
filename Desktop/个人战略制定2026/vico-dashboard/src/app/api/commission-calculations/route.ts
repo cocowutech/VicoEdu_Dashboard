@@ -1,15 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getPrisma } from '@/lib/prisma'
 
 const DEFAULT_USER_ID = 1
 
+const isStaffRequest = (request: NextRequest) => request.cookies.get('vico_role')?.value === 'staff'
+
 // GET - 获取所有计算记录
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const prisma = await getPrisma()
     const calculations = await prisma.commissionCalculation.findMany({
       where: { userId: DEFAULT_USER_ID },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ startDate: 'asc' }, { createdAt: 'desc' }],
     })
     return NextResponse.json(calculations)
   } catch (error) {
@@ -18,7 +20,10 @@ export async function GET() {
 }
 
 // POST - 添加新计算记录
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (isStaffRequest(request)) {
+    return NextResponse.json({ error: 'Read-only access' }, { status: 403 })
+  }
   try {
     const prisma = await getPrisma()
     const data = await request.json()
@@ -52,7 +57,10 @@ export async function POST(request: Request) {
 }
 
 // PUT - 更新计算记录
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
+  if (isStaffRequest(request)) {
+    return NextResponse.json({ error: 'Read-only access' }, { status: 403 })
+  }
   try {
     const prisma = await getPrisma()
     const data = await request.json()
@@ -74,7 +82,10 @@ export async function PUT(request: Request) {
 }
 
 // DELETE - 删除计算记录
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+  if (isStaffRequest(request)) {
+    return NextResponse.json({ error: 'Read-only access' }, { status: 403 })
+  }
   try {
     const prisma = await getPrisma()
     const { searchParams } = new URL(request.url)
