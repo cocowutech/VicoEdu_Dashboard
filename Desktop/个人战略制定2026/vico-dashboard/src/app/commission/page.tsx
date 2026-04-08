@@ -678,6 +678,35 @@ export default function CommissionPage() {
     }
   }
 
+  // 新增课程成本
+  const addCourseMaterial = async () => {
+    try {
+      const maxSort = courseMaterials.length > 0
+        ? Math.max(...courseMaterials.map(c => c.sortOrder)) + 1
+        : 0
+      const res = await fetch('/api/course-materials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseName: '新课程',
+          retailPrice: 0,
+          materialCost: 0,
+          hasLive: false,
+          qianTeacherFee: 0,
+          salesCommissionRate: 0,
+          defaultCampDuration: 0,
+          sortOrder: maxSort,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to create')
+      const newMaterial = await res.json()
+      setCourseMaterials(prev => [...prev, newMaterial])
+    } catch (error) {
+      console.error('Error creating course material:', error)
+      alert('新增失败，请重试')
+    }
+  }
+
   // 删除课程成本
   const deleteCourseMaterial = async (id: number) => {
     if (courseMaterials.length <= 1) {
@@ -1190,7 +1219,15 @@ export default function CommissionPage() {
 
       {/* ==================== 课程成本参考表（可编辑） ==================== */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 no-print">
-        <h3 className="font-bold text-gray-900 text-lg mb-4">课程成本参考表</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-gray-900 text-lg">课程成本参考表</h3>
+          <button
+            onClick={addCourseMaterial}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
+          >
+            + 新增课程
+          </button>
+        </div>
         <p className="text-sm text-gray-700 mb-4">所有字段均可编辑，修改后实时保存</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
