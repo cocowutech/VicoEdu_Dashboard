@@ -2,6 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null
+  return null
+}
+
 interface CommissionRule {
   id: number
   productType: 'with_live' | 'without_live'
@@ -52,6 +60,7 @@ export default function CommissionPage() {
   const [courseMaterials, setCourseMaterials] = useState<CourseMaterial[]>([])
   const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([])
   const [loading, setLoading] = useState(true)
+  const [isReadOnly, setIsReadOnly] = useState(false)
 
   // 输入状态
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
@@ -72,6 +81,11 @@ export default function CommissionPage() {
   // 备注编辑状态
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
   const [editingNoteText, setEditingNoteText] = useState<string>('')
+
+  useEffect(() => {
+    const user = getCookie('vico_user')
+    setIsReadOnly(user === 'Echo' || user === 'Zoey')
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,6 +182,7 @@ export default function CommissionPage() {
 
   // 添加到批量列表并保存到数据库
   const addToBatch = async () => {
+    if (isReadOnly) return
     if (!result) return
     try {
       const res = await fetch('/api/commission-calculations', {
@@ -187,6 +202,7 @@ export default function CommissionPage() {
 
   // 从批量列表删除并从数据库删除
   const removeFromBatch = async (id: number | undefined, index: number) => {
+    if (isReadOnly) return
     if (!id) return
     try {
       const res = await fetch(`/api/commission-calculations?id=${id}`, {
@@ -202,6 +218,7 @@ export default function CommissionPage() {
 
   // 清空批量并从数据库删除所有记录
   const clearBatch = async () => {
+    if (isReadOnly) return
     if (!confirm('确定要清空所有记录吗？')) return
     try {
       const res = await fetch('/api/commission-calculations?id=all', {
@@ -217,6 +234,7 @@ export default function CommissionPage() {
 
   // 开始编辑学员数
   const startEditStudentCount = (r: CalculationResult) => {
+    if (isReadOnly) return
     if (!r.id) return
     setEditingId(r.id)
     setEditingStudentCount(r.studentCount)
@@ -237,6 +255,7 @@ export default function CommissionPage() {
 
   // 确认修改学员数
   const confirmStudentCountChange = async () => {
+    if (isReadOnly) return
     if (!editingId || !previewResult) return
 
     const originalResult = batchResults.find(r => r.id === editingId)
@@ -290,6 +309,7 @@ export default function CommissionPage() {
 
   // 更新计算记录的日期相关字段
   const updateCalculationField = async (id: number, field: keyof CalculationResult, value: string | number | null) => {
+    if (isReadOnly) return
     // 更新本地状态
     setBatchResults(prev => prev.map(r =>
       r.id === id ? { ...r, [field]: value } : r
@@ -309,6 +329,7 @@ export default function CommissionPage() {
 
   // 更新平台抽佣并重新计算分配（平台抽佣是每个营单独设置的）
   const updatePlatformCommission = useCallback(async (id: number, newPlatformCommission: number) => {
+    if (isReadOnly) return
     const result = batchResults.find(r => r.id === id)
     if (!result) return
 
@@ -383,6 +404,7 @@ export default function CommissionPage() {
 
   // 开始编辑备注
   const startEditNote = (r: CalculationResult) => {
+    if (isReadOnly) return
     if (!r.id) return
     setEditingNoteId(r.id)
     setEditingNoteText(r.notes || '')
@@ -390,6 +412,7 @@ export default function CommissionPage() {
 
   // 保存备注
   const saveNote = async () => {
+    if (isReadOnly) return
     if (!editingNoteId) return
     await updateCalculationField(editingNoteId, 'notes', editingNoteText || null)
     setEditingNoteId(null)
@@ -443,6 +466,7 @@ export default function CommissionPage() {
 
   // 更新分佣规则
   const updateRule = async (id: number, field: string, value: number) => {
+    if (isReadOnly) return
     const rule = commissionRules.find(r => r.id === id)
     if (!rule) return
 
@@ -611,6 +635,7 @@ export default function CommissionPage() {
 
   // 更新课程成本
   const updateCourseMaterial = useCallback(async (id: number, field: keyof CourseMaterial, value: string | number | boolean) => {
+    if (isReadOnly) return
     const numValue = typeof value === 'string' && field !== 'courseName' ? Number(value) : value
 
     // 获取当前课程信息
@@ -638,16 +663,19 @@ export default function CommissionPage() {
 
   // 拖拽开始
   const handleDragStart = (index: number) => {
+    if (isReadOnly) return
     setDraggedIndex(index)
   }
 
   // 拖拽结束
   const handleDragEnd = () => {
+    if (isReadOnly) return
     setDraggedIndex(null)
   }
 
   // 拖拽经过
   const handleDragOver = (e: React.DragEvent, index: number) => {
+    if (isReadOnly) return
     e.preventDefault()
     if (draggedIndex === null || draggedIndex === index) return
 
@@ -662,6 +690,7 @@ export default function CommissionPage() {
 
   // 拖拽放下后保存顺序
   const handleDrop = async () => {
+    if (isReadOnly) return
     // 更新所有项的 sortOrder
     const updates = courseMaterials.map((c, i) => ({
       id: c.id,
@@ -678,8 +707,39 @@ export default function CommissionPage() {
     }
   }
 
+  // 新增课程成本
+  const addCourseMaterial = async () => {
+    if (isReadOnly) return
+    try {
+      const maxSort = courseMaterials.length > 0
+        ? Math.max(...courseMaterials.map(c => c.sortOrder)) + 1
+        : 0
+      const res = await fetch('/api/course-materials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseName: '新课程',
+          retailPrice: 0,
+          materialCost: 0,
+          hasLive: false,
+          qianTeacherFee: 0,
+          salesCommissionRate: 0,
+          defaultCampDuration: 0,
+          sortOrder: maxSort,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to create')
+      const newMaterial = await res.json()
+      setCourseMaterials(prev => [...prev, newMaterial])
+    } catch (error) {
+      console.error('Error creating course material:', error)
+      alert('新增失败，请重试')
+    }
+  }
+
   // 删除课程成本
   const deleteCourseMaterial = async (id: number) => {
+    if (isReadOnly) return
     if (courseMaterials.length <= 1) {
       alert('至少保留一个课程')
       return
@@ -735,21 +795,24 @@ export default function CommissionPage() {
                         type="number"
                         value={rule.cocoRate}
                         onChange={(e) => updateRule(rule.id, 'cocoRate', Number(e.target.value))}
-                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                        disabled={isReadOnly}
+                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-gray-700">Zoey</span>
                       <input
                         type="number"
                         value={rule.zoeyRate}
                         onChange={(e) => updateRule(rule.id, 'zoeyRate', Number(e.target.value))}
-                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                        disabled={isReadOnly}
+                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-gray-700">Echo</span>
                       <input
                         type="number"
                         value={rule.echoRate}
                         onChange={(e) => updateRule(rule.id, 'echoRate', Number(e.target.value))}
-                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                        disabled={isReadOnly}
+                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${isValid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         ={sum}%
@@ -779,21 +842,24 @@ export default function CommissionPage() {
                         type="number"
                         value={rule.cocoRate}
                         onChange={(e) => updateRule(rule.id, 'cocoRate', Number(e.target.value))}
-                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                        disabled={isReadOnly}
+                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-gray-700">Zoey</span>
                       <input
                         type="number"
                         value={rule.zoeyRate}
                         onChange={(e) => updateRule(rule.id, 'zoeyRate', Number(e.target.value))}
-                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                        disabled={isReadOnly}
+                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-gray-700">Echo</span>
                       <input
                         type="number"
                         value={rule.echoRate}
                         onChange={(e) => updateRule(rule.id, 'echoRate', Number(e.target.value))}
-                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                        disabled={isReadOnly}
+                        className="w-14 px-1 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${isValid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         ={sum}%
@@ -837,9 +903,9 @@ export default function CommissionPage() {
             />
           </div>
 
-          <button
-            onClick={handleCalculate}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+              <button
+                onClick={handleCalculate}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
           >
             计算
           </button>
@@ -857,7 +923,8 @@ export default function CommissionPage() {
               </h4>
               <button
                 onClick={addToBatch}
-                className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 text-sm font-medium"
+                disabled={isReadOnly}
+                className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 添加到列表
               </button>
@@ -929,7 +996,8 @@ export default function CommissionPage() {
               </button>
               <button
                 onClick={clearBatch}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
+                disabled={isReadOnly}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 清空列表
               </button>
@@ -973,7 +1041,9 @@ export default function CommissionPage() {
                         </span>
                       </td>
                       <td className="px-2 py-2 text-center">
-                        {isEditing ? (
+                        {isReadOnly ? (
+                          <span className="text-gray-900">{r.studentCount}</span>
+                        ) : isEditing ? (
                           <input
                             type="number"
                             min={1}
@@ -1008,7 +1078,8 @@ export default function CommissionPage() {
                           min={0}
                           value={r.platformCommission || 0}
                           onChange={(e) => r.id && updatePlatformCommission(r.id, Number(e.target.value) || 0)}
-                          className="w-20 px-1 py-1 border border-gray-300 rounded text-center text-red-700 bg-white text-xs font-medium print:hidden"
+                          disabled={isReadOnly}
+                          className="w-20 px-1 py-1 border border-gray-300 rounded text-center text-red-700 bg-white text-xs font-medium print:hidden disabled:opacity-50 disabled:cursor-not-allowed"
                           title="输入平台抽佣总金额（将自动重新计算分配）"
                         />
                         <span className="hidden print:inline text-red-700 font-medium">-{(r.platformCommission || 0).toFixed(0)}</span>
@@ -1034,7 +1105,8 @@ export default function CommissionPage() {
                           type="date"
                           value={r.startDate ? r.startDate.split('T')[0] : ''}
                           onChange={(e) => r.id && updateCalculationField(r.id, 'startDate', e.target.value || null)}
-                          className="w-32 px-1 py-1 border border-gray-300 rounded text-center text-gray-900 bg-white text-xs print:hidden"
+                          disabled={isReadOnly}
+                          className="w-32 px-1 py-1 border border-gray-300 rounded text-center text-gray-900 bg-white text-xs print:hidden disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="hidden print:inline">{formatDate(r.startDate)}</span>
                       </td>
@@ -1045,7 +1117,8 @@ export default function CommissionPage() {
                           min={1}
                           value={r.campDuration || ''}
                           onChange={(e) => r.id && updateCalculationField(r.id, 'campDuration', Number(e.target.value) || 0)}
-                          className="w-14 px-1 py-1 border border-gray-300 rounded text-center text-gray-900 bg-white text-xs print:hidden"
+                          disabled={isReadOnly}
+                          className="w-14 px-1 py-1 border border-gray-300 rounded text-center text-gray-900 bg-white text-xs print:hidden disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="hidden print:inline">{r.campDuration || '-'}</span>
                       </td>
@@ -1056,7 +1129,8 @@ export default function CommissionPage() {
                           min={0}
                           value={r.holidayDays || ''}
                           onChange={(e) => r.id && updateCalculationField(r.id, 'holidayDays', Number(e.target.value) || 0)}
-                          className="w-14 px-1 py-1 border border-gray-300 rounded text-center text-gray-900 bg-white text-xs print:hidden"
+                          disabled={isReadOnly}
+                          className="w-14 px-1 py-1 border border-gray-300 rounded text-center text-gray-900 bg-white text-xs print:hidden disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className="hidden print:inline">{r.holidayDays || '-'}</span>
                       </td>
@@ -1068,17 +1142,19 @@ export default function CommissionPage() {
                       </td>
                       {/* 备注 */}
                       <td className="px-2 py-2 text-center">
-                        <button
-                          onClick={() => startEditNote(r)}
-                          className={`px-2 py-1 rounded text-xs print:hidden ${r.notes ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'}`}
-                          title={r.notes || '点击添加备注'}
-                        >
-                          {r.notes ? '📝' : '➕'}
-                        </button>
+                        {!isReadOnly && (
+                          <button
+                            onClick={() => startEditNote(r)}
+                            className={`px-2 py-1 rounded text-xs print:hidden ${r.notes ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'}`}
+                            title={r.notes || '点击添加备注'}
+                          >
+                            {r.notes ? '📝' : '➕'}
+                          </button>
+                        )}
                         <span className="hidden print:inline text-xs">{r.notes || '-'}</span>
                       </td>
                       <td className="px-2 py-2 text-center no-print">
-                        {isEditing ? (
+                        {isReadOnly ? null : isEditing ? (
                           <div className="flex gap-1 justify-center">
                             <button
                               onClick={confirmStudentCountChange}
@@ -1190,7 +1266,17 @@ export default function CommissionPage() {
 
       {/* ==================== 课程成本参考表（可编辑） ==================== */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 no-print">
-        <h3 className="font-bold text-gray-900 text-lg mb-4">课程成本参考表</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-gray-900 text-lg">课程成本参考表</h3>
+          {!isReadOnly && (
+            <button
+              onClick={addCourseMaterial}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
+            >
+              + 新增课程
+            </button>
+          )}
+        </div>
         <p className="text-sm text-gray-700 mb-4">所有字段均可编辑，修改后实时保存</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
@@ -1211,7 +1297,7 @@ export default function CommissionPage() {
               {courseMaterials.map((c, index) => (
                 <tr
                   key={c.id}
-                  draggable
+                  draggable={!isReadOnly}
                   onDragStart={() => handleDragStart(index)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => handleDragOver(e, index)}
@@ -1226,14 +1312,16 @@ export default function CommissionPage() {
                       type="text"
                       value={c.courseName}
                       onChange={(e) => updateCourseMaterial(c.id, 'courseName', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2 text-center">
                     <select
                       value={c.hasLive ? 'true' : 'false'}
                       onChange={(e) => updateCourseMaterial(c.id, 'hasLive', e.target.value === 'true')}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white text-center"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="true">带直播</option>
                       <option value="false">不带直播</option>
@@ -1244,7 +1332,8 @@ export default function CommissionPage() {
                       type="number"
                       value={c.retailPrice}
                       onChange={(e) => updateCourseMaterial(c.id, 'retailPrice', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2 text-center">
@@ -1252,7 +1341,8 @@ export default function CommissionPage() {
                       type="number"
                       value={c.materialCost}
                       onChange={(e) => updateCourseMaterial(c.id, 'materialCost', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2 text-center">
@@ -1260,7 +1350,8 @@ export default function CommissionPage() {
                       type="number"
                       value={c.qianTeacherFee}
                       onChange={(e) => updateCourseMaterial(c.id, 'qianTeacherFee', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2 text-center">
@@ -1268,7 +1359,8 @@ export default function CommissionPage() {
                       type="number"
                       value={c.salesCommissionRate}
                       onChange={(e) => updateCourseMaterial(c.id, 'salesCommissionRate', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-3 py-2 text-center bg-indigo-50">
@@ -1277,13 +1369,15 @@ export default function CommissionPage() {
                       min={0}
                       value={c.defaultCampDuration}
                       onChange={(e) => updateCourseMaterial(c.id, 'defaultCampDuration', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                      disabled={isReadOnly}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </td>
                   <td className="px-2 py-2 text-center">
                     <button
                       onClick={() => deleteCourseMaterial(c.id)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                      disabled={isReadOnly}
+                      className="text-red-500 hover:text-red-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       title="删除"
                     >
                       🗑️
