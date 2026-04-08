@@ -12,6 +12,15 @@ interface CommissionRule {
   echoRate: number
 }
 
+interface CommissionFixedRate {
+  id: number
+  personName: string
+  examType: string
+  campType: string
+  amountPerStudent: number
+  allocationType: string
+}
+
 interface CourseMaterial {
   id: number
   courseName: string
@@ -21,6 +30,7 @@ interface CourseMaterial {
   qianTeacherFee: number
   salesCommissionRate: number
   defaultCampDuration: number
+  examType: string
   sortOrder: number
 }
 
@@ -42,6 +52,8 @@ interface CalculationResult {
   cocoRate: number
   zoeyRate: number
   echoRate: number
+  thirdPersonName: string
+  thirdPersonMode: 'percentage' | 'fixed'
   startDate?: string | null
   campDuration: number
   holidayDays: number
@@ -51,6 +63,7 @@ interface CalculationResult {
 export default function CommissionPage() {
   const [courseMaterials, setCourseMaterials] = useState<CourseMaterial[]>([])
   const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([])
+  const [fixedRates, setFixedRates] = useState<CommissionFixedRate[]>([])
   const [loading, setLoading] = useState(true)
 
   // 输入状态
@@ -79,20 +92,24 @@ export default function CommissionPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [materialsRes, rulesRes, calculationsRes] = await Promise.all([
+        const [materialsRes, rulesRes, calculationsRes, fixedRatesRes] = await Promise.all([
           fetch('/api/course-materials'),
           fetch('/api/commission-rules'),
           fetch('/api/commission-calculations'),
+          fetch('/api/commission-fixed-rates'),
         ])
         const materialsData = await materialsRes.json()
         const rulesData = await rulesRes.json()
         const calculationsData = await calculationsRes.json()
+        const fixedRatesData = await fixedRatesRes.json()
         const materials = Array.isArray(materialsData) ? materialsData : []
         const rules = Array.isArray(rulesData) ? rulesData : []
         const calculations = Array.isArray(calculationsData) ? calculationsData : []
+        const rates = Array.isArray(fixedRatesData) ? fixedRatesData : []
         setCourseMaterials(materials)
         setCommissionRules(rules)
         setBatchResults(calculations)
+        setFixedRates(rates)
         if (materials.length > 0) {
           setSelectedCourseId(materials[0].id)
         }
@@ -118,6 +135,13 @@ export default function CommissionPage() {
     return null
   }, [commissionRules])
 
+  // 查找定额分配规则（根据课程的examType匹配）
+  const getFixedRate = useCallback((examType: string): CommissionFixedRate | null => {
+    if (!examType) return null
+    const match = fixedRates.find(r => r.examType === examType)
+    return match || null
+  }, [fixedRates])
+
   // 计算单个课程分配（平台抽佣初始为0，在计算列表中单独设置）
   const calculateDistribution = useCallback((course: CourseMaterial, students: number, platformFeePerStudent: number = 0): CalculationResult | null => {
     const rule = getApplicableRule(course.hasLive, students)
@@ -125,17 +149,50 @@ export default function CommissionPage() {
 
     const totalRevenue = course.retailPrice * students
     const totalMaterialCost = course.materialCost * students
-    // 平台抽佣：每单固定金额 × 学员数（初始为0，在计算列表中设置）
     const totalPlatformCommission = platformFeePerStudent * students
-    // 销售分佣：基于 (总营收 - 平台抽佣) 计算
     const revenueAfterPlatform = totalRevenue - totalPlatformCommission
     const totalSalesCommission = revenueAfterPlatform * (course.salesCommissionRate / 100)
-    // 钱老师费用：使用数据库中设置的值
     const totalQianFee = course.qianTeacherFee * students
 
     // 可分配池 = (总营收 - 平台抽佣) × (1 - 销售分佣率%) - 教材成本 - 钱老师费用
     const distributionPool = revenueAfterPlatform * (1 - course.salesCommissionRate / 100) - totalMaterialCost - totalQianFee
 
+    // 检查是否有定额分配规则（新班主任）
+    const fixedRate = getFixedRate(course.examType)
+
+    if (fixedRate) {
+      // 定额模式: Zoey = pool × zoeyRate%, Ari = 定额 × 人数, Coco = pool - Zoey - Ari
+      const zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+      const echoAmount = fixedRate.amountPerStudent * students
+      const cocoAmount = distributionPool - zoeyAmount - echoAmount
+
+      return {
+        courseName: course.courseName,
+        studentCount: students,
+        hasLive: course.hasLive,
+        retailPrice: course.retailPrice,
+        totalRevenue,
+        materialCost: totalMaterialCost,
+        salesCommission: totalSalesCommission,
+        platformCommission: totalPlatformCommission,
+        qianTeacherFee: totalQianFee,
+        distributionPool,
+        cocoAmount,
+        zoeyAmount,
+        echoAmount,
+        cocoRate: rule.cocoRate,
+        zoeyRate: rule.zoeyRate,
+        echoRate: fixedRate.amountPerStudent, // 存储人均定额
+        thirdPersonName: fixedRate.personName,
+        thirdPersonMode: 'fixed',
+        startDate: null,
+        campDuration: course.defaultCampDuration || 0,
+        holidayDays: 0,
+        notes: null,
+      }
+    }
+
+    // 比例模式 (原Echo模式): 三人按比例分配
     return {
       courseName: course.courseName,
       studentCount: students,
@@ -153,12 +210,14 @@ export default function CommissionPage() {
       cocoRate: rule.cocoRate,
       zoeyRate: rule.zoeyRate,
       echoRate: rule.echoRate,
+      thirdPersonName: 'Echo',
+      thirdPersonMode: 'percentage',
       startDate: null,
       campDuration: course.defaultCampDuration || 0,
       holidayDays: 0,
       notes: null,
     }
-  }, [getApplicableRule])
+  }, [getApplicableRule, getFixedRate])
 
   // 单个计算
   const handleCalculate = () => {
@@ -245,13 +304,14 @@ export default function CommissionPage() {
     const originalResult = batchResults.find(r => r.id === editingId)
     if (!originalResult) return
 
+    const thirdName = originalResult.thirdPersonName || 'Echo'
     const changes = [
       `学员数: ${originalResult.studentCount} → ${previewResult.studentCount}`,
       `总营收: ${originalResult.totalRevenue.toLocaleString()} → ${previewResult.totalRevenue.toLocaleString()}`,
       `可分配池: ${originalResult.distributionPool.toFixed(0)} → ${previewResult.distributionPool.toFixed(0)}`,
       `Coco: ${originalResult.cocoAmount.toFixed(0)} → ${previewResult.cocoAmount.toFixed(0)}`,
       `Zoey: ${originalResult.zoeyAmount.toFixed(0)} → ${previewResult.zoeyAmount.toFixed(0)}`,
-      `Echo: ${originalResult.echoAmount.toFixed(0)} → ${previewResult.echoAmount.toFixed(0)}`,
+      `${thirdName}: ${originalResult.echoAmount.toFixed(0)} → ${previewResult.echoAmount.toFixed(0)}`,
     ]
 
     const confirmMsg = `以下数据将发生变动:\n\n${changes.join('\n')}\n\n是否确认修改？`
@@ -321,30 +381,39 @@ export default function CommissionPage() {
     const rule = getApplicableRule(result.hasLive, result.studentCount)
     if (!rule) return
 
-    // 重新计算所有相关值
     const totalRevenue = result.totalRevenue
     const totalMaterialCost = result.materialCost
-    // 销售分佣：基于 (总营收 - 平台抽佣) 计算
     const revenueAfterPlatform = totalRevenue - newPlatformCommission
     const totalSalesCommission = revenueAfterPlatform * (course.salesCommissionRate / 100)
     const totalQianFee = result.qianTeacherFee
-    // 可分配池 = (总营收 - 平台抽佣) × (1 - 销售分佣率%) - 教材成本 - 钱老师费用
     const distributionPool = revenueAfterPlatform * (1 - course.salesCommissionRate / 100) - totalMaterialCost - totalQianFee
+
+    let cocoAmount: number, zoeyAmount: number, echoAmount: number
+
+    if (result.thirdPersonMode === 'fixed') {
+      // 定额模式: echoRate 存的是人均定额
+      zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+      echoAmount = result.echoRate * result.studentCount
+      cocoAmount = distributionPool - zoeyAmount - echoAmount
+    } else {
+      // 比例模式
+      cocoAmount = distributionPool * (rule.cocoRate / 100)
+      zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+      echoAmount = distributionPool * (rule.echoRate / 100)
+    }
 
     const updatedResult: CalculationResult = {
       ...result,
       platformCommission: newPlatformCommission,
       salesCommission: totalSalesCommission,
       distributionPool,
-      cocoAmount: distributionPool * (rule.cocoRate / 100),
-      zoeyAmount: distributionPool * (rule.zoeyRate / 100),
-      echoAmount: distributionPool * (rule.echoRate / 100),
+      cocoAmount,
+      zoeyAmount,
+      echoAmount,
     }
 
-    // 更新本地状态
     setBatchResults(prev => prev.map(r => r.id === id ? updatedResult : r))
 
-    // 保存到数据库
     try {
       await fetch('/api/commission-calculations', {
         method: 'PUT',
@@ -354,9 +423,9 @@ export default function CommissionPage() {
           platformCommission: newPlatformCommission,
           salesCommission: totalSalesCommission,
           distributionPool,
-          cocoAmount: updatedResult.cocoAmount,
-          zoeyAmount: updatedResult.zoeyAmount,
-          echoAmount: updatedResult.echoAmount,
+          cocoAmount,
+          zoeyAmount,
+          echoAmount,
         }),
       })
     } catch (error) {
@@ -427,13 +496,15 @@ export default function CommissionPage() {
     let csv = '\uFEFF' // UTF-8 BOM
 
     csv += '运营分配计算结果\n'
-    csv += '课程名称,学员数,零售价,总营收,教材成本,销售分佣,平台抽佣,钱老师费用,可分配池,Coco分配,Zoey分配,Echo分配,Coco比例,Zoey比例,Echo比例\n'
+    csv += '课程名称,学员数,零售价,总营收,教材成本,销售分佣,平台抽佣,钱老师费用,可分配池,Coco分配,Zoey分配,班主任,班主任分配,分配模式,Coco比例,Zoey比例\n'
 
     batchResults.forEach(r => {
-      csv += `${r.courseName},${r.studentCount},${r.retailPrice},${r.totalRevenue},${r.materialCost.toFixed(0)},${r.salesCommission.toFixed(0)},${(r.platformCommission || 0).toFixed(0)},${r.qianTeacherFee.toFixed(0)},${r.distributionPool.toFixed(0)},${r.cocoAmount.toFixed(0)},${r.zoeyAmount.toFixed(0)},${r.echoAmount.toFixed(0)},${r.cocoRate}%,${r.zoeyRate}%,${r.echoRate}%\n`
+      const thirdName = r.thirdPersonName || 'Echo'
+      const modeLabel = r.thirdPersonMode === 'fixed' ? `定额¥${r.echoRate}/人` : `${r.echoRate}%`
+      csv += `${r.courseName},${r.studentCount},${r.retailPrice},${r.totalRevenue},${r.materialCost.toFixed(0)},${r.salesCommission.toFixed(0)},${(r.platformCommission || 0).toFixed(0)},${r.qianTeacherFee.toFixed(0)},${r.distributionPool.toFixed(0)},${r.cocoAmount.toFixed(0)},${r.zoeyAmount.toFixed(0)},${thirdName},${r.echoAmount.toFixed(0)},${modeLabel},${r.cocoRate}%,${r.zoeyRate}%\n`
     })
 
-    csv += `合计,${batchTotals.totalStudents},,${batchTotals.totalRevenue},${batchTotals.totalMaterialCost.toFixed(0)},${batchTotals.totalSalesCommission.toFixed(0)},${batchTotals.totalPlatformCommission.toFixed(0)},${batchTotals.totalQianFee.toFixed(0)},${batchTotals.totalPool.toFixed(0)},${batchTotals.totalCoco.toFixed(0)},${batchTotals.totalZoey.toFixed(0)},${batchTotals.totalEcho.toFixed(0)},,,\n`
+    csv += `合计,${batchTotals.totalStudents},,${batchTotals.totalRevenue},${batchTotals.totalMaterialCost.toFixed(0)},${batchTotals.totalSalesCommission.toFixed(0)},${batchTotals.totalPlatformCommission.toFixed(0)},${batchTotals.totalQianFee.toFixed(0)},${batchTotals.totalPool.toFixed(0)},${batchTotals.totalCoco.toFixed(0)},${batchTotals.totalZoey.toFixed(0)},,${batchTotals.totalEcho.toFixed(0)},,,,\n`
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -477,14 +548,24 @@ export default function CommissionPage() {
 
       const totalRevenue = updatedCourse.retailPrice * result.studentCount
       const totalMaterialCost = updatedCourse.materialCost * result.studentCount
-      // 平台抽佣：保留原记录的值（每个营单独设置）
       const totalPlatformCommission = result.platformCommission || 0
-      // 销售分佣：基于 (总营收 - 平台抽佣) 计算
       const revenueAfterPlatform = totalRevenue - totalPlatformCommission
       const totalSalesCommission = revenueAfterPlatform * (updatedCourse.salesCommissionRate / 100)
       const totalQianFee = updatedCourse.qianTeacherFee * result.studentCount
-      // 可分配池 = (总营收 - 平台抽佣) × (1 - 销售分佣率%) - 教材成本 - 钱老师费用
       const distributionPool = revenueAfterPlatform * (1 - updatedCourse.salesCommissionRate / 100) - totalMaterialCost - totalQianFee
+
+      let cocoAmount: number, zoeyAmount: number, echoAmount: number
+
+      if (result.thirdPersonMode === 'fixed') {
+        // 定额模式: echoRate 存的是人均定额
+        zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+        echoAmount = result.echoRate * result.studentCount
+        cocoAmount = distributionPool - zoeyAmount - echoAmount
+      } else {
+        cocoAmount = distributionPool * (rule.cocoRate / 100)
+        zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+        echoAmount = distributionPool * (rule.echoRate / 100)
+      }
 
       const newResult: CalculationResult = {
         ...result,
@@ -497,12 +578,12 @@ export default function CommissionPage() {
         platformCommission: totalPlatformCommission,
         qianTeacherFee: totalQianFee,
         distributionPool,
-        cocoAmount: distributionPool * (rule.cocoRate / 100),
-        zoeyAmount: distributionPool * (rule.zoeyRate / 100),
-        echoAmount: distributionPool * (rule.echoRate / 100),
+        cocoAmount,
+        zoeyAmount,
+        echoAmount,
         cocoRate: rule.cocoRate,
         zoeyRate: rule.zoeyRate,
-        echoRate: rule.echoRate,
+        echoRate: result.thirdPersonMode === 'fixed' ? result.echoRate : rule.echoRate,
       }
       updatedResults.push(newResult)
     }
@@ -699,6 +780,7 @@ export default function CommissionPage() {
           qianTeacherFee: 0,
           salesCommissionRate: 0,
           defaultCampDuration: 0,
+          examType: '',
           sortOrder: maxSort,
         }),
       })
@@ -747,7 +829,7 @@ export default function CommissionPage() {
           <h3 className="font-bold text-gray-900 text-lg">分佣比例设置</h3>
           <span className="text-sm text-green-600 font-medium">自动保存</span>
         </div>
-        <p className="text-sm text-gray-700 mb-4">根据产品类型和学员人数，设置 Coco、Zoey、Echo 三人的分佣比例</p>
+        <p className="text-sm text-gray-700 mb-4">根据产品类型和学员人数，设置 Coco、Zoey、Echo 三人的分佣比例（旧方案仍适用于已有记录）</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 带直播产品规则 */}
@@ -838,6 +920,155 @@ export default function CommissionPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ==================== 班主任定额分配方案 ==================== */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 no-print">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-gray-900 text-lg">班主任定额分配方案</h3>
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch('/api/commission-fixed-rates', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    personName: 'Ari老师',
+                    examType: 'KET',
+                    campType: 'full',
+                    amountPerStudent: 0,
+                    allocationType: 'fixed',
+                  }),
+                })
+                if (!res.ok) throw new Error('Failed to create')
+                const newRate = await res.json()
+                setFixedRates(prev => [...prev, newRate])
+              } catch (error) {
+                console.error('Error creating fixed rate:', error)
+                alert('新增失败，请重试')
+              }
+            }}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
+          >
+            + 新增规则
+          </button>
+        </div>
+        <p className="text-sm text-gray-700 mb-4">
+          按营类型设置班主任人均定额。计算逻辑：Zoey = 可分配池 × Zoey比例，班主任 = 定额 × 学员数，Coco = 可分配池 - Zoey - 班主任
+        </p>
+
+        {fixedRates.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-200 text-gray-900">
+                  <th className="px-3 py-2 text-left font-semibold">班主任姓名</th>
+                  <th className="px-3 py-2 text-center font-semibold">考试类型</th>
+                  <th className="px-3 py-2 text-center font-semibold">营类型</th>
+                  <th className="px-3 py-2 text-center font-semibold">人均定额 (¥)</th>
+                  <th className="px-3 py-2 text-center font-semibold">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fixedRates.map((rate, index) => (
+                  <tr key={rate.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-3 py-2">
+                      <input
+                        type="text"
+                        value={rate.personName}
+                        onChange={async (e) => {
+                          const newName = e.target.value
+                          setFixedRates(prev => prev.map(r => r.id === rate.id ? { ...r, personName: newName } : r))
+                          await fetch('/api/commission-fixed-rates', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: rate.id, personName: newName }),
+                          })
+                        }}
+                        className="w-32 px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <select
+                        value={rate.examType}
+                        onChange={async (e) => {
+                          const newType = e.target.value
+                          setFixedRates(prev => prev.map(r => r.id === rate.id ? { ...r, examType: newType } : r))
+                          await fetch('/api/commission-fixed-rates', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: rate.id, examType: newType }),
+                          })
+                        }}
+                        className="px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white"
+                      >
+                        <option value="KET">KET</option>
+                        <option value="PET">PET</option>
+                        <option value="FCE">FCE</option>
+                      </select>
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <select
+                        value={rate.campType}
+                        onChange={async (e) => {
+                          const newType = e.target.value
+                          setFixedRates(prev => prev.map(r => r.id === rate.id ? { ...r, campType: newType } : r))
+                          await fetch('/api/commission-fixed-rates', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: rate.id, campType: newType }),
+                          })
+                        }}
+                        className="px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white"
+                      >
+                        <option value="full">全程营</option>
+                        <option value="sprint">考冲营</option>
+                      </select>
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <input
+                        type="number"
+                        min={0}
+                        value={rate.amountPerStudent}
+                        onChange={async (e) => {
+                          const newAmount = Number(e.target.value) || 0
+                          setFixedRates(prev => prev.map(r => r.id === rate.id ? { ...r, amountPerStudent: newAmount } : r))
+                          await fetch('/api/commission-fixed-rates', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: rate.id, amountPerStudent: newAmount }),
+                          })
+                        }}
+                        className="w-24 px-2 py-1 border border-gray-400 rounded text-center text-gray-900 bg-white"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <button
+                        onClick={async () => {
+                          if (!confirm('确定删除此规则？')) return
+                          try {
+                            await fetch(`/api/commission-fixed-rates?id=${rate.id}`, { method: 'DELETE' })
+                            setFixedRates(prev => prev.filter(r => r.id !== rate.id))
+                          } catch (error) {
+                            console.error('Error deleting fixed rate:', error)
+                            alert('删除失败')
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        删除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            暂无定额分配规则，点击「+ 新增规则」添加班主任定额方案
+          </div>
+        )}
       </div>
 
       {/* ==================== 计算器 ==================== */}
@@ -932,7 +1163,7 @@ export default function CommissionPage() {
 
               <div className="grid grid-cols-3 gap-4 mt-3">
                 <div className="bg-pink-200 rounded-lg p-3 text-center border border-pink-400">
-                  <div className="text-pink-900 font-semibold">Coco ({result.cocoRate}%)</div>
+                  <div className="text-pink-900 font-semibold">Coco {result.thirdPersonMode === 'fixed' ? '(余额)' : `(${result.cocoRate}%)`}</div>
                   <div className="text-2xl font-bold text-pink-900">{result.cocoAmount.toFixed(0)}</div>
                 </div>
                 <div className="bg-green-200 rounded-lg p-3 text-center border border-green-400">
@@ -940,7 +1171,9 @@ export default function CommissionPage() {
                   <div className="text-2xl font-bold text-green-900">{result.zoeyAmount.toFixed(0)}</div>
                 </div>
                 <div className="bg-yellow-200 rounded-lg p-3 text-center border border-yellow-500">
-                  <div className="text-yellow-900 font-semibold">Echo ({result.echoRate}%)</div>
+                  <div className="text-yellow-900 font-semibold">
+                    {result.thirdPersonName} {result.thirdPersonMode === 'fixed' ? `(¥${result.echoRate}/人)` : `(${result.echoRate}%)`}
+                  </div>
                   <div className="text-2xl font-bold text-yellow-900">{result.echoAmount.toFixed(0)}</div>
                 </div>
               </div>
@@ -984,7 +1217,7 @@ export default function CommissionPage() {
                   <th className="px-2 py-3 text-right font-semibold bg-blue-100">可分配池</th>
                   <th className="px-2 py-3 text-right font-semibold bg-pink-200 text-pink-900">Coco</th>
                   <th className="px-2 py-3 text-right font-semibold bg-green-200 text-green-900">Zoey</th>
-                  <th className="px-2 py-3 text-right font-semibold bg-yellow-200 text-yellow-900">Echo</th>
+                  <th className="px-2 py-3 text-right font-semibold bg-yellow-200 text-yellow-900">班主任</th>
                   <th className="px-2 py-3 text-center font-semibold bg-indigo-100 text-indigo-900">开营时间</th>
                   <th className="px-2 py-3 text-center font-semibold bg-indigo-100 text-indigo-900">营期</th>
                   <th className="px-2 py-3 text-center font-semibold bg-indigo-100 text-indigo-900">假期</th>
@@ -1059,8 +1292,9 @@ export default function CommissionPage() {
                       <td className={`px-2 py-2 text-right bg-green-100 font-bold ${hasChange ? 'text-blue-600' : 'text-green-900'}`}>
                         {displayData.zoeyAmount.toFixed(0)}
                       </td>
-                      <td className={`px-2 py-2 text-right bg-yellow-100 font-bold ${hasChange ? 'text-blue-600' : 'text-yellow-900'}`}>
-                        {displayData.echoAmount.toFixed(0)}
+                      <td className={`px-2 py-2 text-right bg-yellow-100 font-bold ${hasChange ? 'text-blue-600' : 'text-yellow-900'}`} title={`${displayData.thirdPersonName || 'Echo'} ${displayData.thirdPersonMode === 'fixed' ? `(¥${displayData.echoRate}/人)` : `(${displayData.echoRate}%)`}`}>
+                        <div>{displayData.echoAmount.toFixed(0)}</div>
+                        <div className="text-xs font-normal text-yellow-700">{displayData.thirdPersonName || 'Echo'}</div>
                       </td>
                       {/* 开营时间 */}
                       <td className="px-2 py-2 text-center bg-indigo-50">
@@ -1212,7 +1446,7 @@ export default function CommissionPage() {
               </div>
             </div>
             <div className="bg-yellow-600 rounded-xl p-4 text-white">
-              <div className="text-sm font-medium">Echo 总收入</div>
+              <div className="text-sm font-medium">班主任 总支出</div>
               <div className="text-3xl font-bold">{batchTotals.totalEcho.toFixed(0)}</div>
               <div className="text-sm mt-1">
                 占比 {batchTotals.totalPool > 0 ? ((batchTotals.totalEcho / batchTotals.totalPool) * 100).toFixed(1) : 0}%
@@ -1239,8 +1473,9 @@ export default function CommissionPage() {
             <thead>
               <tr className="bg-gray-200 text-gray-900">
                 <th className="w-10 px-2 py-3 text-center font-semibold" title="拖拽排序">☰</th>
-                <th className="w-48 px-3 py-3 text-left font-semibold">课程名称</th>
-                <th className="w-28 px-3 py-3 text-center font-semibold">类型</th>
+                <th className="w-44 px-3 py-3 text-left font-semibold">课程名称</th>
+                <th className="w-24 px-3 py-3 text-center font-semibold">类型</th>
+                <th className="w-20 px-3 py-3 text-center font-semibold">考试类型</th>
                 <th className="w-24 px-3 py-3 text-center font-semibold">零售价</th>
                 <th className="w-24 px-3 py-3 text-center font-semibold">教材成本</th>
                 <th className="w-28 px-3 py-3 text-center font-semibold">钱老师费用</th>
@@ -1279,6 +1514,18 @@ export default function CommissionPage() {
                     >
                       <option value="true">带直播</option>
                       <option value="false">不带直播</option>
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <select
+                      value={c.examType || ''}
+                      onChange={(e) => updateCourseMaterial(c.id, 'examType', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-400 rounded text-gray-900 bg-white text-center"
+                    >
+                      <option value="">-</option>
+                      <option value="KET">KET</option>
+                      <option value="PET">PET</option>
+                      <option value="FCE">FCE</option>
                     </select>
                   </td>
                   <td className="px-3 py-2 text-center">

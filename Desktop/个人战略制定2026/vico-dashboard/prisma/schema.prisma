@@ -34,6 +34,7 @@ model User {
   fixedCosts           FixedCost[]
   presetProducts       PresetProduct[]
   commissionRules         CommissionRule[]
+  commissionFixedRates    CommissionFixedRate[]
   globalSettings          GlobalSetting[]
   courseMaterialCosts     CourseMaterialCost[]
   commissionCalculations  CommissionCalculation[]
@@ -390,6 +391,7 @@ model CourseMaterialCost {
   salesCommissionRate Float    @map("sales_commission_rate") // 销售分佣比例(0-100)
   platformFee         Float    @default(0) @map("platform_fee") // 平台抽佣费用(每单固定金额)
   defaultCampDuration Int      @default(0) @map("default_camp_duration") // 默认营期长度(天)
+  examType            String   @default("") @map("exam_type") // 考试类型: KET/PET/FCE
   sortOrder           Int      @default(0) @map("sort_order") // 排序
   isActive            Boolean  @default(true) @map("is_active") // 是否启用
   createdAt           DateTime @default(now()) @map("created_at")
@@ -398,6 +400,24 @@ model CourseMaterialCost {
   user User @relation(fields: [userId], references: [id])
 
   @@map("course_material_costs")
+}
+
+// 班主任定额分配规则表 - 根据考试类型和营类型设置人均定额
+model CommissionFixedRate {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  personName       String   @map("person_name") // 班主任姓名
+  examType         String   @map("exam_type") // 考试类型: KET/PET/FCE
+  campType         String   @map("camp_type") // 营类型: full(全程营)/sprint(考冲营)
+  amountPerStudent Float    @map("amount_per_student") // 人均定额
+  allocationType   String   @default("fixed") @map("allocation_type") // 分配类型: fixed(定额) / percentage(比例)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, personName, examType, campType])
+  @@map("commission_fixed_rates")
 }
 
 // 运营分配计算记录表
@@ -420,6 +440,8 @@ model CommissionCalculation {
   cocoRate           Float     @map("coco_rate")
   zoeyRate           Float     @map("zoey_rate")
   echoRate           Float     @map("echo_rate")
+  thirdPersonName    String    @default("Echo") @map("third_person_name") // 第三人姓名(Echo/Ari等)
+  thirdPersonMode    String    @default("percentage") @map("third_person_mode") // 分配模式: percentage(比例)/fixed(定额)
   startDate          DateTime? @map("start_date") // 开营日期
   campDuration       Int       @default(0) @map("camp_duration") // 营期长度(天)
   holidayDays        Int       @default(0) @map("holiday_days") // 预计假期天数

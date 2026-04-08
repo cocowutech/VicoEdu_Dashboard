@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
         cocoRate: data.cocoRate,
         zoeyRate: data.zoeyRate,
         echoRate: data.echoRate,
+        thirdPersonName: data.thirdPersonName || 'Echo',
+        thirdPersonMode: data.thirdPersonMode || 'percentage',
         startDate: data.startDate ? new Date(data.startDate) : null,
         campDuration: data.campDuration || 0,
         holidayDays: data.holidayDays || 0,
