@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     const prisma = await getPrisma()
     const data = await request.json()
 
+    const now = new Date()
     const rate = await prisma.commissionFixedRate.create({
       data: {
         userId: DEFAULT_USER_ID,
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
         campType: data.campType,
         amountPerStudent: data.amountPerStudent || 0,
         allocationType: data.allocationType || 'fixed',
+        updatedAt: now,
       },
     })
     return NextResponse.json(rate)

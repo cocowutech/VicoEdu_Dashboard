@@ -416,7 +416,6 @@ model CommissionFixedRate {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@unique([userId, personName, examType, campType])
   @@map("commission_fixed_rates")
 }
 

@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPrisma } from '@/lib/prisma'
 const DEFAULT_USER_ID = 1
 
+const isStaffRequest = (request: NextRequest) => request.cookies.get('vico_role')?.value === 'staff'
+
 // GET - 获取所有分佣规则
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const prisma = await getPrisma()
     const rules = await prisma.commissionRule.findMany({
@@ -22,6 +24,9 @@ export async function GET() {
 
 // POST - 创建新分佣规则
 export async function POST(request: NextRequest) {
+  if (isStaffRequest(request)) {
+    return NextResponse.json({ error: 'Read-only access' }, { status: 403 })
+  }
   try {
     const prisma = await getPrisma()
     const data = await request.json()
@@ -46,6 +51,9 @@ export async function POST(request: NextRequest) {
 
 // PUT - 更新分佣规则
 export async function PUT(request: NextRequest) {
+  if (isStaffRequest(request)) {
+    return NextResponse.json({ error: 'Read-only access' }, { status: 403 })
+  }
   try {
     const prisma = await getPrisma()
     const data = await request.json()
@@ -64,6 +72,9 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - 删除分佣规则
 export async function DELETE(request: NextRequest) {
+  if (isStaffRequest(request)) {
+    return NextResponse.json({ error: 'Read-only access' }, { status: 403 })
+  }
   try {
     const prisma = await getPrisma()
     const { searchParams } = new URL(request.url)
