@@ -53,7 +53,7 @@ interface CalculationResult {
   zoeyRate: number
   echoRate: number
   thirdPersonName: string
-  thirdPersonMode: 'percentage' | 'fixed'
+  thirdPersonMode: 'percentage' | 'fixed' | 'none'
   startDate?: string | null
   campDuration: number
   holidayDays: number
@@ -69,7 +69,7 @@ export default function CommissionPage() {
   // 输入状态
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
   const [studentCount, setStudentCount] = useState<number>(1)
-  const [selectedClassManager, setSelectedClassManager] = useState<'echo' | 'fixed'>('echo')
+  const [selectedClassManager, setSelectedClassManager] = useState<'echo' | 'fixed' | 'none'>('echo')
   const [result, setResult] = useState<CalculationResult | null>(null)
 
   // 批量计算
@@ -159,8 +159,8 @@ export default function CommissionPage() {
   }, [fixedRates])
 
   // 计算单个课程分配（平台抽佣初始为0，在计算列表中单独设置）
-  // classManager: 'echo' = Echo比例模式, 'fixed' = 定额模式（Ari等）
-  const calculateDistribution = useCallback((course: CourseMaterial, students: number, platformFeePerStudent: number = 0, classManager: 'echo' | 'fixed' = 'echo'): CalculationResult | null => {
+  // classManager: 'echo' = Echo比例模式, 'fixed' = 定额模式（Ari等）, 'none' = 仅Coco+Zoey
+  const calculateDistribution = useCallback((course: CourseMaterial, students: number, platformFeePerStudent: number = 0, classManager: 'echo' | 'fixed' | 'none' = 'echo'): CalculationResult | null => {
     const rule = getApplicableRule(course.hasLive, students)
     if (!rule) return null
 
@@ -173,6 +173,37 @@ export default function CommissionPage() {
 
     // 可分配池 = (总营收 - 平台抽佣) × (1 - 销售分佣率%) - 教材成本 - 钱老师费用
     const distributionPool = revenueAfterPlatform * (1 - course.salesCommissionRate / 100) - totalMaterialCost - totalQianFee
+
+    // 无班主任模式: Zoey按比例, 剩余全给Coco
+    if (classManager === 'none') {
+      const zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+      const cocoAmount = distributionPool - zoeyAmount
+
+      return {
+        courseName: course.courseName,
+        studentCount: students,
+        hasLive: course.hasLive,
+        retailPrice: course.retailPrice,
+        totalRevenue,
+        materialCost: totalMaterialCost,
+        salesCommission: totalSalesCommission,
+        platformCommission: totalPlatformCommission,
+        qianTeacherFee: totalQianFee,
+        distributionPool,
+        cocoAmount,
+        zoeyAmount,
+        echoAmount: 0,
+        cocoRate: rule.cocoRate,
+        zoeyRate: rule.zoeyRate,
+        echoRate: 0,
+        thirdPersonName: '无',
+        thirdPersonMode: 'none',
+        startDate: null,
+        campDuration: course.defaultCampDuration || 0,
+        holidayDays: 0,
+        notes: null,
+      }
+    }
 
     // 定额模式: 查找匹配的定额分配规则
     if (classManager === 'fixed') {
@@ -1134,6 +1165,7 @@ export default function CommissionPage() {
                   {[...new Set(fixedRates.map(r => r.personName))].join('/')} (定额分配)
                 </option>
               )}
+              <option value="none">无 (仅Coco+Zoey)</option>
             </select>
           </div>
 
@@ -1196,21 +1228,23 @@ export default function CommissionPage() {
             <div className="border-t-2 border-blue-300 pt-4">
               <div className="text-gray-900 mb-2 font-medium">可分配池: <span className="font-bold text-blue-800 text-xl">{result.distributionPool.toFixed(0)}</span></div>
 
-              <div className="grid grid-cols-3 gap-4 mt-3">
+              <div className={`grid ${result.thirdPersonMode === 'none' ? 'grid-cols-2' : 'grid-cols-3'} gap-4 mt-3`}>
                 <div className="bg-pink-200 rounded-lg p-3 text-center border border-pink-400">
-                  <div className="text-pink-900 font-semibold">Coco {result.thirdPersonMode === 'fixed' ? '(余额)' : `(${result.cocoRate}%)`}</div>
+                  <div className="text-pink-900 font-semibold">Coco {result.thirdPersonMode === 'none' ? '(余额)' : result.thirdPersonMode === 'fixed' ? '(余额)' : `(${result.cocoRate}%)`}</div>
                   <div className="text-2xl font-bold text-pink-900">{result.cocoAmount.toFixed(0)}</div>
                 </div>
                 <div className="bg-green-200 rounded-lg p-3 text-center border border-green-400">
                   <div className="text-green-900 font-semibold">Zoey ({result.zoeyRate}%)</div>
                   <div className="text-2xl font-bold text-green-900">{result.zoeyAmount.toFixed(0)}</div>
                 </div>
-                <div className="bg-yellow-200 rounded-lg p-3 text-center border border-yellow-500">
-                  <div className="text-yellow-900 font-semibold">
-                    {result.thirdPersonName} {result.thirdPersonMode === 'fixed' ? `(¥${result.echoRate}/人)` : `(${result.echoRate}%)`}
+                {result.thirdPersonMode !== 'none' && (
+                  <div className="bg-yellow-200 rounded-lg p-3 text-center border border-yellow-500">
+                    <div className="text-yellow-900 font-semibold">
+                      {result.thirdPersonName} {result.thirdPersonMode === 'fixed' ? `(¥${result.echoRate}/人)` : `(${result.echoRate}%)`}
+                    </div>
+                    <div className="text-2xl font-bold text-yellow-900">{result.echoAmount.toFixed(0)}</div>
                   </div>
-                  <div className="text-2xl font-bold text-yellow-900">{result.echoAmount.toFixed(0)}</div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -1327,8 +1361,8 @@ export default function CommissionPage() {
                       <td className={`px-2 py-2 text-right bg-green-100 font-bold ${hasChange ? 'text-blue-600' : 'text-green-900'}`}>
                         {displayData.zoeyAmount.toFixed(0)}
                       </td>
-                      <td className={`px-2 py-2 text-right bg-yellow-100 font-bold ${hasChange ? 'text-blue-600' : 'text-yellow-900'}`} title={`${displayData.thirdPersonName || 'Echo'} ${displayData.thirdPersonMode === 'fixed' ? `(¥${displayData.echoRate}/人)` : `(${displayData.echoRate}%)`}`}>
-                        <div>{displayData.echoAmount.toFixed(0)}</div>
+                      <td className={`px-2 py-2 text-right bg-yellow-100 font-bold ${hasChange ? 'text-blue-600' : displayData.thirdPersonMode === 'none' ? 'text-gray-400' : 'text-yellow-900'}`} title={displayData.thirdPersonMode === 'none' ? '无班主任' : `${displayData.thirdPersonName || 'Echo'} ${displayData.thirdPersonMode === 'fixed' ? `(¥${displayData.echoRate}/人)` : `(${displayData.echoRate}%)`}`}>
+                        <div>{displayData.thirdPersonMode === 'none' ? '-' : displayData.echoAmount.toFixed(0)}</div>
                         <div className="text-xs font-normal text-yellow-700">{displayData.thirdPersonName || 'Echo'}</div>
                       </td>
                       {/* 开营时间 */}
