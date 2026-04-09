@@ -69,6 +69,7 @@ export default function CommissionPage() {
   // 输入状态
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
   const [studentCount, setStudentCount] = useState<number>(1)
+  const [selectedClassManager, setSelectedClassManager] = useState<'echo' | 'fixed'>('echo')
   const [result, setResult] = useState<CalculationResult | null>(null)
 
   // 批量计算
@@ -157,7 +158,8 @@ export default function CommissionPage() {
   }, [fixedRates])
 
   // 计算单个课程分配（平台抽佣初始为0，在计算列表中单独设置）
-  const calculateDistribution = useCallback((course: CourseMaterial, students: number, platformFeePerStudent: number = 0): CalculationResult | null => {
+  // classManager: 'echo' = Echo比例模式, 'fixed' = 定额模式（Ari等）
+  const calculateDistribution = useCallback((course: CourseMaterial, students: number, platformFeePerStudent: number = 0, classManager: 'echo' | 'fixed' = 'echo'): CalculationResult | null => {
     const rule = getApplicableRule(course.hasLive, students)
     if (!rule) return null
 
@@ -171,43 +173,44 @@ export default function CommissionPage() {
     // 可分配池 = (总营收 - 平台抽佣) × (1 - 销售分佣率%) - 教材成本 - 钱老师费用
     const distributionPool = revenueAfterPlatform * (1 - course.salesCommissionRate / 100) - totalMaterialCost - totalQianFee
 
-    // 检查是否有定额分配规则（新班主任）- 从课程名称推断类型
-    const { examType: inferredExamType, campType: inferredCampType } = inferCourseType(course.courseName)
-    const fixedRate = getFixedRate(inferredExamType, inferredCampType)
+    // 定额模式: 查找匹配的定额分配规则
+    if (classManager === 'fixed') {
+      const { examType: inferredExamType, campType: inferredCampType } = inferCourseType(course.courseName)
+      const fixedRate = getFixedRate(inferredExamType, inferredCampType)
 
-    if (fixedRate) {
-      // 定额模式: Zoey = pool × zoeyRate%, Ari = 定额 × 人数, Coco = pool - Zoey - Ari
-      const zoeyAmount = distributionPool * (rule.zoeyRate / 100)
-      const echoAmount = fixedRate.amountPerStudent * students
-      const cocoAmount = distributionPool - zoeyAmount - echoAmount
+      if (fixedRate) {
+        const zoeyAmount = distributionPool * (rule.zoeyRate / 100)
+        const echoAmount = fixedRate.amountPerStudent * students
+        const cocoAmount = distributionPool - zoeyAmount - echoAmount
 
-      return {
-        courseName: course.courseName,
-        studentCount: students,
-        hasLive: course.hasLive,
-        retailPrice: course.retailPrice,
-        totalRevenue,
-        materialCost: totalMaterialCost,
-        salesCommission: totalSalesCommission,
-        platformCommission: totalPlatformCommission,
-        qianTeacherFee: totalQianFee,
-        distributionPool,
-        cocoAmount,
-        zoeyAmount,
-        echoAmount,
-        cocoRate: rule.cocoRate,
-        zoeyRate: rule.zoeyRate,
-        echoRate: fixedRate.amountPerStudent, // 存储人均定额
-        thirdPersonName: fixedRate.personName,
-        thirdPersonMode: 'fixed',
-        startDate: null,
-        campDuration: course.defaultCampDuration || 0,
-        holidayDays: 0,
-        notes: null,
+        return {
+          courseName: course.courseName,
+          studentCount: students,
+          hasLive: course.hasLive,
+          retailPrice: course.retailPrice,
+          totalRevenue,
+          materialCost: totalMaterialCost,
+          salesCommission: totalSalesCommission,
+          platformCommission: totalPlatformCommission,
+          qianTeacherFee: totalQianFee,
+          distributionPool,
+          cocoAmount,
+          zoeyAmount,
+          echoAmount,
+          cocoRate: rule.cocoRate,
+          zoeyRate: rule.zoeyRate,
+          echoRate: fixedRate.amountPerStudent,
+          thirdPersonName: fixedRate.personName,
+          thirdPersonMode: 'fixed',
+          startDate: null,
+          campDuration: course.defaultCampDuration || 0,
+          holidayDays: 0,
+          notes: null,
+        }
       }
     }
 
-    // 比例模式 (原Echo模式): 三人按比例分配
+    // 比例模式 (Echo模式): 三人按比例分配
     return {
       courseName: course.courseName,
       studentCount: students,
@@ -239,7 +242,7 @@ export default function CommissionPage() {
     if (!selectedCourseId) return
     const course = courseMaterials.find(c => c.id === selectedCourseId)
     if (!course) return
-    const calcResult = calculateDistribution(course, studentCount)
+    const calcResult = calculateDistribution(course, studentCount, 0, selectedClassManager)
     setResult(calcResult)
   }
 
@@ -1115,6 +1118,22 @@ export default function CommissionPage() {
               onChange={(e) => setStudentCount(Math.max(1, Number(e.target.value)))}
               className="w-24 px-3 py-2 border border-gray-400 rounded-lg text-center text-gray-900 bg-white"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-900 font-medium mb-1">班主任</label>
+            <select
+              value={selectedClassManager}
+              onChange={(e) => setSelectedClassManager(e.target.value as 'echo' | 'fixed')}
+              className="px-3 py-2 border border-gray-400 rounded-lg text-gray-900 bg-white"
+            >
+              <option value="echo">Echo (比例分配)</option>
+              {fixedRates.length > 0 && (
+                <option value="fixed">
+                  {[...new Set(fixedRates.map(r => r.personName))].join('/')} (定额分配)
+                </option>
+              )}
+            </select>
           </div>
 
           <button
