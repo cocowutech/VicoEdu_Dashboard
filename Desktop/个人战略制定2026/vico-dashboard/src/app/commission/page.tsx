@@ -135,10 +135,24 @@ export default function CommissionPage() {
     return null
   }, [commissionRules])
 
-  // 查找定额分配规则（根据课程的examType匹配）
-  const getFixedRate = useCallback((examType: string): CommissionFixedRate | null => {
+  // 从课程名称推断 examType 和 campType
+  const inferCourseType = useCallback((courseName: string): { examType: string; campType: string } => {
+    let examType = ''
+    if (courseName.includes('KET')) examType = 'KET'
+    else if (courseName.includes('PET')) examType = 'PET'
+    else if (courseName.includes('FCE')) examType = 'FCE'
+
+    let campType = ''
+    if (courseName.includes('全程')) campType = 'full'
+    else if (courseName.includes('考冲')) campType = 'sprint'
+
+    return { examType, campType }
+  }, [])
+
+  // 查找定额分配规则（根据课程的examType + campType匹配）
+  const getFixedRate = useCallback((examType: string, campType: string): CommissionFixedRate | null => {
     if (!examType) return null
-    const match = fixedRates.find(r => r.examType === examType)
+    const match = fixedRates.find(r => r.examType === examType && r.campType === campType)
     return match || null
   }, [fixedRates])
 
@@ -157,8 +171,9 @@ export default function CommissionPage() {
     // 可分配池 = (总营收 - 平台抽佣) × (1 - 销售分佣率%) - 教材成本 - 钱老师费用
     const distributionPool = revenueAfterPlatform * (1 - course.salesCommissionRate / 100) - totalMaterialCost - totalQianFee
 
-    // 检查是否有定额分配规则（新班主任）
-    const fixedRate = getFixedRate(course.examType)
+    // 检查是否有定额分配规则（新班主任）- 从课程名称推断类型
+    const { examType: inferredExamType, campType: inferredCampType } = inferCourseType(course.courseName)
+    const fixedRate = getFixedRate(inferredExamType, inferredCampType)
 
     if (fixedRate) {
       // 定额模式: Zoey = pool × zoeyRate%, Ari = 定额 × 人数, Coco = pool - Zoey - Ari
@@ -217,7 +232,7 @@ export default function CommissionPage() {
       holidayDays: 0,
       notes: null,
     }
-  }, [getApplicableRule, getFixedRate])
+  }, [getApplicableRule, getFixedRate, inferCourseType])
 
   // 单个计算
   const handleCalculate = () => {
