@@ -137,11 +137,12 @@ export default function CommissionPage() {
   }, [commissionRules])
 
   // 从课程名称推断 examType 和 campType
+  // 支持完整名 "KET全程营(带直播)" 和缩写 "K全程T"
   const inferCourseType = useCallback((courseName: string): { examType: string; campType: string } => {
     let examType = ''
-    if (courseName.includes('KET')) examType = 'KET'
-    else if (courseName.includes('PET')) examType = 'PET'
-    else if (courseName.includes('FCE')) examType = 'FCE'
+    if (/KET|^K/.test(courseName)) examType = 'KET'
+    else if (/PET|^P/.test(courseName)) examType = 'PET'
+    else if (/FCE|^F/.test(courseName)) examType = 'FCE'
 
     let campType = ''
     if (courseName.includes('全程')) campType = 'full'
